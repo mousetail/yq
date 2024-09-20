@@ -6,9 +6,8 @@ use langs::LANGS;
 use serde::Serialize;
 use std::{
     collections::{hash_map::Entry, HashMap, HashSet},
-    fs::{remove_file, OpenOptions},
-    io::{BufRead, Write},
-    os::unix::ffi::OsStrExt,
+    fs::OpenOptions,
+    io::Write,
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -81,22 +80,20 @@ fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunP
     let mut buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
     buff.push(lang.bin_location);
 
+    let temp_directory = tempfile::TempDir::new()?;
+    let path = temp_directory.path().join(".file");
     let mut tmp_file = OpenOptions::new()
         .create_new(true)
         .write(true)
-        .open("/tmp/code")?;
-    tmp_file.write_all(code.as_bytes()).unwrap();
-    drop(tmp_file);
+        .open(&path)?;
+    tmp_file.write_all(code.as_bytes())?;
+    tmp_file.flush()?;
 
-    println!("{buff:?}");
-
-    let code_output = Command::new(buff)
-        .arg("/tmp/code")
+    let _code_output = Command::new(buff)
+        .arg(path)
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .output()?;
-
-    remove_file("/tmp/code").unwrap();
 
     Ok(())
 }
