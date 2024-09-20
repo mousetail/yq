@@ -6,7 +6,7 @@ use langs::LANGS;
 use serde::Serialize;
 use std::{
     collections::{hash_map::Entry, HashMap, HashSet},
-    fs::OpenOptions,
+    fs::{read_dir, OpenOptions},
     io::Write,
     path::PathBuf,
     process::{Command, Stdio},
@@ -77,8 +77,7 @@ fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunP
         ));
     }
 
-    let mut buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
-    buff.push(lang.bin_location);
+    let buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
 
     let temp_directory = tempfile::TempDir::new()?;
     let path = temp_directory.path().join(".file");
@@ -89,11 +88,35 @@ fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunP
     tmp_file.write_all(code.as_bytes())?;
     tmp_file.flush()?;
 
-    let _code_output = Command::new(buff)
-        .arg(path)
+    // println!("{:?}", read_dir("/usr/bin")?.collect::<Vec<_>>());
+
+    let code_output = Command::new("bwrap")
+        .args([
+            // "--clearenv",
+            // "--hostname",
+            // "yq",
+            "--bind", "/bin", "/bin", "--chdir", "/",
+        ])
+        // .args(["--ro-bind"])
+        // .arg(path)
+        // .args(["/code", "--ro-bind"])
+        // .arg(buff)
+        // .args(["/lang"])
+        .args([
+            "--unshare-all",
+            // "--new-session",
+        ])
+        .arg("/bin/true")
+        .arg("/lang")
         .stdout(Stdio::inherit())
         .stderr(Stdio::inherit())
         .output()?;
+
+    // let _code_output = Command::new(buff)
+    //     .arg(path)
+    //     .stdout(Stdio::inherit())
+    //     .stderr(Stdio::inherit())
+    //     .output()?;
 
     Ok(())
 }

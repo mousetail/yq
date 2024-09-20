@@ -6,6 +6,6 @@ pub struct Lang {
 
 pub const LANGS: &'static [Lang] = &[Lang {
     name: "nodejs",
-    bin_location: "bin/node",
+    bin_location: "/lang/bin/node",
     plugin: "https://github.com/asdf-vm/asdf-nodejs.git",
 }];
