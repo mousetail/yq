@@ -6,7 +6,6 @@ use langs::LANGS;
 use serde::Serialize;
 use std::{
     collections::{hash_map::Entry, HashMap, HashSet},
-    ffi::OsStr,
     fs::{remove_file, OpenOptions},
     io::{BufRead, Write},
     os::unix::ffi::OsStrExt,
@@ -137,7 +136,7 @@ fn get_lang_versions() -> HashMap<String, HashSet<String>> {
 
             let versions = Command::new("asdf").args(["list", name]).output().unwrap();
 
-            if (!versions.status.success()) {
+            if !versions.status.success() {
                 println!("Finding versions failed");
             }
 
@@ -176,6 +175,6 @@ fn main() {
         process_message(message, &mut lang_versions).unwrap();
     }
 
-    let mut lang_versions = get_lang_versions();
+    let lang_versions = get_lang_versions();
     println!("{lang_versions:?}");
 }
