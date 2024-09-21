@@ -80,7 +80,7 @@ fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunP
     let buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
 
     let temp_directory = tempfile::TempDir::new()?;
-    let path = temp_directory.path().join(".file");
+    let path = temp_directory.path().join("file");
     let mut tmp_file = OpenOptions::new()
         .create_new(true)
         .write(true)
@@ -90,27 +90,47 @@ fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunP
 
     // println!("{:?}", read_dir("/usr/bin")?.collect::<Vec<_>>());
 
-    let code_output = Command::new("bwrap")
+    println!("before");
+    let mut command = Command::new("bwrap");
+    command
         .args([
             // "--clearenv",
             // "--hostname",
             // "yq",
-            "--bind", "/bin", "/bin", "--chdir", "/",
+            "--ro-bind",
+            "/bin",
+            "/bin",
+            "--chdir",
+            "/",
+            "--ro-bind",
+            "/lib64",
+            "/lib64",
+            "--ro-bind",
+            "/usr",
+            "/usr",
+            "--ro-bind",
+            "/lib",
+            "/lib",
         ])
-        // .args(["--ro-bind"])
-        // .arg(path)
-        // .args(["/code", "--ro-bind"])
-        // .arg(buff)
-        // .args(["/lang"])
-        .args([
-            "--unshare-all",
-            // "--new-session",
-        ])
-        .arg("/bin/true")
-        .arg("/lang")
+        .args(["--ro-bind"])
+        .arg(path)
+        .args(["/code", "--ro-bind"])
+        .arg(buff)
+        .args(["/lang"])
+        .args(["--unshare-all", "--new-session"])
+        // .arg("/usr/bin/ls")
+        // .arg("-al")
         .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()?;
+        .stderr(Stdio::inherit());
+
+    for (key, value) in lang.env {
+        command.args(["--setenv", *key, *value]);
+    }
+
+    command.arg(lang.bin_location).arg("/code");
+
+    command.output()?;
+    println!("after");
 
     // let _code_output = Command::new(buff)
     //     .arg(path)
@@ -183,10 +203,19 @@ fn main() {
             lang: "nodejs".to_owned(),
             version: "17.3.0".to_owned(),
         },
+        Message::Install {
+            lang: "python".to_owned(),
+            version: "3.12.0".to_owned(),
+        },
         Message::Run {
             lang: "nodejs".to_owned(),
             version: "17.3.0".to_owned(),
             code: "console.log(\"Hello World!\");".to_owned(),
+        },
+        Message::Run {
+            lang: "python".to_owned(),
+            version: "3.12.0".to_owned(),
+            code: "import math\nprint(f\"Hello World! {math.sqrt(25)}\");".to_owned(),
         },
     ];
 
