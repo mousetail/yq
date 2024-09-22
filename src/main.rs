@@ -1,18 +1,21 @@
+mod cachemap;
 mod error;
 mod langs;
+mod run;
 
-use error::{RunLangError, RunProcessError};
-use langs::LANGS;
-use serde::Serialize;
-use std::{
-    collections::{hash_map::Entry, HashMap, HashSet},
-    fs::OpenOptions,
-    io::Write,
-    path::PathBuf,
-    process::{Command, Stdio},
+use std::sync::Arc;
+
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Json, Router,
 };
+use cachemap::CacheMap;
+use error::RunLangError;
+use run::{get_lang_versions, process_message};
+use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Deserialize)]
 pub enum Message {
     Install {
         lang: String,
@@ -25,205 +28,70 @@ pub enum Message {
     },
 }
 
-fn install_lang(
-    lang_name: String,
-    version: String,
-    versions: &mut HashMap<String, HashSet<String>>,
-) -> Result<(), RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
+// fn main() {
+//     println!("Starting!");
 
-    let versions = match versions.entry(lang.name.to_owned()) {
-        Entry::Occupied(e) => e.into_mut(),
-        Entry::Vacant(vac) => {
-            let plugin_install_output = Command::new("asdf")
-                .args(["plugin", "add", lang.name, lang.plugin])
-                .stderr(Stdio::inherit())
-                .status()?;
-            if !plugin_install_output.success() {
-                return Err(RunProcessError::NonZeroStatusCode(
-                    plugin_install_output.code(),
-                ));
-            }
-            vac.insert(HashSet::new())
-        }
-    };
+//     let mut lang_versions = get_lang_versions();
+//     println!("{lang_versions:?}");
 
-    if !versions.contains(&version) {
-        let output = Command::new("asdf")
-            .args(["install", lang.name, &version])
-            .stderr(Stdio::inherit())
-            .output()?;
+//     let messages = [
+//         Message::Install {
+//             lang: "nodejs".to_owned(),
+//             version: "17.3.0".to_owned(),
+//         },
+//         Message::Install {
+//             lang: "python".to_owned(),
+//             version: "3.12.0".to_owned(),
+//         },
+//         Message::Run {
+//             lang: "nodejs".to_owned(),
+//             version: "17.3.0".to_owned(),
+//             code: "console.log(\"Hello World!\");".to_owned(),
+//         },
+//         Message::Run {
+//             lang: "python".to_owned(),
+//             version: "3.12.0".to_owned(),
+//             code: "import math\nprint(f\"Hello World! {math.sqrt(25)}\");".to_owned(),
+//         },
+//     ];
 
-        if !output.status.success() {
-            return Err(RunProcessError::NonZeroStatusCode(output.status.code()));
-        }
+//     for message in messages {
+//         println!("processing message {message:?}");
+//         process_message(message, &mut lang_versions).unwrap();
+//     }
 
-        versions.insert(version);
-    }
+//     let lang_versions = get_lang_versions();
+//     println!("{lang_versions:?}");
+// }
 
-    Ok(())
+#[tokio::main]
+async fn main() {
+    // initialize tracing
+    tracing_subscriber::fmt::init();
+
+    let lang_versions = get_lang_versions().await;
+
+    // build our application with a route
+    let app = Router::new()
+        // `GET /` goes to `root`
+        .route("/", get(root))
+        .route("/", post(handle_message))
+        .with_state(Arc::new(lang_versions));
+
+    // run our app with hyper, listening globally on port 3000
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
-fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
-
-    let lang_folder = Command::new("asdf")
-        .args(["where", lang.name, &version])
-        .stderr(Stdio::inherit())
-        .output()?;
-    if !lang_folder.status.success() {
-        return Err(RunProcessError::NonZeroStatusCode(
-            lang_folder.status.code(),
-        ));
-    }
-
-    let buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
-
-    let temp_directory = tempfile::TempDir::new()?;
-    let path = temp_directory.path().join("file");
-    let mut tmp_file = OpenOptions::new()
-        .create_new(true)
-        .write(true)
-        .open(&path)?;
-    tmp_file.write_all(code.as_bytes())?;
-    tmp_file.flush()?;
-
-    // println!("{:?}", read_dir("/usr/bin")?.collect::<Vec<_>>());
-
-    println!("before");
-    let mut command = Command::new("bwrap");
-    command
-        .args([
-            // "--clearenv",
-            // "--hostname",
-            // "yq",
-            "--ro-bind",
-            "/bin",
-            "/bin",
-            "--chdir",
-            "/",
-            "--ro-bind",
-            "/lib64",
-            "/lib64",
-            "--ro-bind",
-            "/usr",
-            "/usr",
-            "--ro-bind",
-            "/lib",
-            "/lib",
-        ])
-        .args(["--ro-bind"])
-        .arg(path)
-        .args(["/code", "--ro-bind"])
-        .arg(buff)
-        .args(["/lang"])
-        .args(["--unshare-all", "--new-session"])
-        // .arg("/usr/bin/ls")
-        // .arg("-al")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit());
-
-    for (key, value) in lang.env {
-        command.args(["--setenv", *key, *value]);
-    }
-
-    command.arg(lang.bin_location).arg("/code");
-
-    command.output()?;
-    println!("after");
-
-    // let _code_output = Command::new(buff)
-    //     .arg(path)
-    //     .stdout(Stdio::inherit())
-    //     .stderr(Stdio::inherit())
-    //     .output()?;
-
-    Ok(())
+async fn root() -> &'static str {
+    return "Server is working properly";
 }
 
-fn process_message(
-    message: Message,
-    lang_versions: &mut HashMap<String, HashSet<String>>,
-) -> Result<(), RunLangError> {
-    match message {
-        Message::Install { lang, version } => install_lang(lang, version, lang_versions)
-            .map_err(|k| RunLangError::PluginInstallFailure(k)),
-        Message::Run {
-            lang,
-            version,
-            code,
-        } => run_lang(lang, version, code).map_err(|k| RunLangError::RunLangError(k)),
-    }
-}
-
-fn get_lang_versions() -> HashMap<String, HashSet<String>> {
-    let output = Command::new("asdf")
-        .args(["plugin", "list"])
-        .output()
-        .unwrap();
-    if !output.status.success() {
-        panic!("Finding the list of plugins failed");
-    }
-
-    let output_text = String::from_utf8(output.stdout).unwrap();
-    output_text
-        .lines()
-        .map(|line| {
-            let parts = line.split_ascii_whitespace().collect::<Vec<_>>();
-            let Some(name) = parts.first() else {
-                panic!("bad output from asdf plugin list: {line} {parts:?}")
-            };
-
-            let versions = Command::new("asdf").args(["list", name]).output().unwrap();
-
-            if !versions.status.success() {
-                println!("Finding versions failed");
-            }
-
-            return (
-                (*name).to_owned(),
-                String::from_utf8(versions.stdout)
-                    .unwrap()
-                    .lines()
-                    .map(|k| k.trim().to_owned())
-                    .collect::<HashSet<_>>(),
-            );
-        })
-        .collect()
-}
-
-fn main() {
-    println!("Starting!");
-
-    let mut lang_versions = get_lang_versions();
-    println!("{lang_versions:?}");
-
-    let messages = [
-        Message::Install {
-            lang: "nodejs".to_owned(),
-            version: "17.3.0".to_owned(),
-        },
-        Message::Install {
-            lang: "python".to_owned(),
-            version: "3.12.0".to_owned(),
-        },
-        Message::Run {
-            lang: "nodejs".to_owned(),
-            version: "17.3.0".to_owned(),
-            code: "console.log(\"Hello World!\");".to_owned(),
-        },
-        Message::Run {
-            lang: "python".to_owned(),
-            version: "3.12.0".to_owned(),
-            code: "import math\nprint(f\"Hello World! {math.sqrt(25)}\");".to_owned(),
-        },
-    ];
-
-    for message in messages {
-        println!("processing message {message:?}");
-        process_message(message, &mut lang_versions).unwrap();
-    }
-
-    let lang_versions = get_lang_versions();
-    println!("{lang_versions:?}");
+#[axum::debug_handler]
+async fn handle_message(
+    lang_versions: State<Arc<CacheMap<String, CacheMap<String, ()>>>>,
+    message: Json<Message>,
+) -> Result<&'static str, RunLangError> {
+    process_message(message.0, &lang_versions.0).await?;
+    return Ok("");
 }
