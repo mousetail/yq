@@ -16,16 +16,10 @@ use run::{get_lang_versions, process_message};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Deserialize)]
-pub enum Message {
-    Install {
-        lang: String,
-        version: String,
-    },
-    Run {
-        lang: String,
-        version: String,
-        code: String,
-    },
+pub struct Message {
+    lang: String,
+    version: String,
+    code: String,
 }
 
 // fn main() {
@@ -74,8 +68,7 @@ async fn main() {
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
-        .route("/", get(root))
-        .route("/", post(handle_message))
+        .route("/", get(root).post(handle_message))
         .with_state(Arc::new(lang_versions));
 
     // run our app with hyper, listening globally on port 3000

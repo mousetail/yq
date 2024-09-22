@@ -139,18 +139,13 @@ pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<(), RunLangError> {
-    match message {
-        Message::Install { lang, version } => install_lang(lang, &version, lang_versions)
-            .await
-            .map_err(|k| RunLangError::PluginInstallFailure(k)),
-        Message::Run {
-            lang,
-            version,
-            code,
-        } => run_lang(lang, version, code)
-            .await
-            .map_err(|k| RunLangError::RunLangError(k)),
-    }
+    install_lang(message.lang.clone(), &message.version, lang_versions)
+        .await
+        .map_err(|e| RunLangError::PluginInstallFailure(e))?;
+    run_lang(message.lang, message.version, message.code)
+        .await
+        .map_err(|k| RunLangError::RunLangError(k))?;
+    Ok(())
 }
 
 async fn get_versions_for_language(line: &str) -> (String, CacheMap<String, ()>) {
