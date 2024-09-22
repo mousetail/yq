@@ -6,7 +6,7 @@ use langs::LANGS;
 use serde::Serialize;
 use std::{
     collections::{hash_map::Entry, HashMap, HashSet},
-    fs::{read_dir, OpenOptions},
+    fs::OpenOptions,
     io::Write,
     path::PathBuf,
     process::{Command, Stdio},
