@@ -1,0 +1,10 @@
+services:
+  yq-runner:
+    build: .
+    security_opt:
+      - seccomp:unconfined
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./target/debug:/debug
+    entrypoint: ['/debug/yet-to-be-named-golfing-site']
