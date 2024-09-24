@@ -5,14 +5,10 @@ mod run;
 
 use std::sync::Arc;
 
-use axum::{
-    extract::State,
-    routing::{get, post},
-    Json, Router,
-};
+use axum::{extract::State, routing::get, Json, Router};
 use cachemap::CacheMap;
 use error::RunLangError;
-use run::{get_lang_versions, process_message};
+use run::{get_lang_versions, process_message, RunLangOutput};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Debug, Deserialize)]
@@ -84,7 +80,7 @@ async fn root() -> &'static str {
 async fn handle_message(
     lang_versions: State<Arc<CacheMap<String, CacheMap<String, ()>>>>,
     message: Json<Message>,
-) -> Result<&'static str, RunLangError> {
-    process_message(message.0, &lang_versions.0).await?;
-    return Ok("");
+) -> Result<Json<RunLangOutput>, RunLangError> {
+    let result = process_message(message.0, &lang_versions.0).await?;
+    return Ok(Json(result));
 }

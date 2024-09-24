@@ -1,6 +1,7 @@
 use std::{fs::OpenOptions, io::Write, path::PathBuf, process::Stdio};
 
 use async_process::Command;
+use serde::Serialize;
 
 use crate::{
     cachemap::CacheMap,
@@ -8,6 +9,14 @@ use crate::{
     langs::{Lang, LANGS},
     Message,
 };
+
+#[derive(Serialize)]
+pub struct RunLangOutput {
+    #[serde(with = "serde_bytes")]
+    stdout: Vec<u8>,
+    #[serde(with = "serde_bytes")]
+    stderr: Vec<u8>,
+}
 
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
     let plugin_install_output = Command::new("asdf")
@@ -57,7 +66,11 @@ async fn install_lang(
     Ok(())
 }
 
-async fn run_lang(lang_name: String, version: String, code: String) -> Result<(), RunProcessError> {
+async fn run_lang(
+    lang_name: String,
+    version: String,
+    code: String,
+) -> Result<RunLangOutput, RunProcessError> {
     let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
 
     let lang_folder = Command::new("asdf")
@@ -82,9 +95,6 @@ async fn run_lang(lang_name: String, version: String, code: String) -> Result<()
     tmp_file.write_all(code.as_bytes())?;
     tmp_file.flush()?;
 
-    // println!("{:?}", read_dir("/usr/bin")?.collect::<Vec<_>>());
-
-    println!("before");
     let mut command = Command::new("bwrap");
     command
         .args([
@@ -111,11 +121,7 @@ async fn run_lang(lang_name: String, version: String, code: String) -> Result<()
         .args(["/code", "--ro-bind"])
         .arg(buff)
         .args(["/lang"])
-        .args(["--unshare-all", "--new-session"])
-        // .arg("/usr/bin/ls")
-        // .arg("-al")
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit());
+        .args(["--unshare-all", "--new-session"]);
 
     for (key, value) in lang.env {
         command.args(["--setenv", *key, *value]);
@@ -123,29 +129,30 @@ async fn run_lang(lang_name: String, version: String, code: String) -> Result<()
 
     command.arg(lang.bin_location).arg("/code");
 
-    command.output().await?;
-    println!("after");
+    let output = command.output().await?;
 
-    // let _code_output = Command::new(buff)
-    //     .arg(path)
-    //     .stdout(Stdio::inherit())
-    //     .stderr(Stdio::inherit())
-    //     .output()?;
+    let mut stdout = output.stdout;
+    stdout.truncate(10000);
+    let mut stderr = output.stderr;
+    stderr.truncate(1000);
 
-    Ok(())
+    Ok(RunLangOutput {
+        stdout: stdout,
+        stderr: stderr,
+    })
 }
 
 pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
-) -> Result<(), RunLangError> {
+) -> Result<RunLangOutput, RunLangError> {
     install_lang(message.lang.clone(), &message.version, lang_versions)
         .await
         .map_err(|e| RunLangError::PluginInstallFailure(e))?;
-    run_lang(message.lang, message.version, message.code)
+    let output = run_lang(message.lang, message.version, message.code)
         .await
         .map_err(|k| RunLangError::RunLangError(k))?;
-    Ok(())
+    Ok(output)
 }
 
 async fn get_versions_for_language(line: &str) -> (String, CacheMap<String, ()>) {
