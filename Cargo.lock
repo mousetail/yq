@@ -506,6 +506,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49f1f14873335454500d59611f1cf4a4b0f786f9ac11f4312a78e4cf2566695b"
 
 [[package]]
+name = "lang-runner"
+version = "0.1.0"
+dependencies = [
+ "async-process",
+ "axum",
+ "dashmap",
+ "futures-util",
+ "serde",
+ "serde_bytes",
+ "tempfile",
+ "tokio",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1201,18 +1216,3 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
-
-[[package]]
-name = "yet-to-be-named-golfing-site"
-version = "0.1.0"
-dependencies = [
- "async-process",
- "axum",
- "dashmap",
- "futures-util",
- "serde",
- "serde_bytes",
- "tempfile",
- "tokio",
- "tracing-subscriber",
-]
