@@ -3,6 +3,8 @@ use std::{hash::Hash, sync::Arc};
 use dashmap::DashMap;
 use tokio::sync::OnceCell;
 
+// todo: Evaluate replacing with `OnceMap` from the UV project:
+// https://github.com/astral-sh/uv/blob/main/crates/once-map/src/lib.rs
 pub struct CacheMap<K: Hash + Eq, V> {
     inner: DashMap<K, Arc<OnceCell<V>>>,
 }
