@@ -2,7 +2,7 @@ mod controllers;
 mod models;
 
 use axum::{
-    routing::{get, post},
+    routing::get,
     Extension, Router,
 };
 
@@ -14,6 +14,7 @@ use std::fs;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let env = fs::read_to_string(".env").unwrap();
+    let env = env.lines().find(|k| k.contains("DATABASE_URL")).unwrap();
     let (key, database_url) = env.split_once('=').unwrap();
 
     assert_eq!(key.trim(), "DATABASE_URL");
@@ -32,6 +33,10 @@ async fn main() -> anyhow::Result<()> {
         .layer(Extension(pool));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .with_graceful_shutdown(auto_reload::wait_reload())
+        .await
+        .unwrap();
+    //println!("edit");
     Ok(())
 }

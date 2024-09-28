@@ -14,3 +14,4 @@ serde_bytes = "0.11.15"
 sqlx = { version="0.8.2", features=["postgres", "runtime-tokio"] }
 tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+auto-reload = {path = "../auto-reload"}

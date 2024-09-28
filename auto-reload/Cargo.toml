@@ -1,0 +1,8 @@
+[package]
+name = "auto-reload"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures-util = "0.3.30"
+inotify="0.11.0"

@@ -1,7 +1,7 @@
 use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, Json};
 use sqlx::PgPool;
 
-use crate::models::challenge::{self, Challenge, InsertedId, NewChallenge};
+use crate::models::challenge::{Challenge, InsertedId, NewChallenge};
 
 pub async fn all_challenges(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
     let sql = "SELECT * FROM challenges";
