@@ -1,10 +1,8 @@
 mod controllers;
 mod models;
 
-use axum::{
-    routing::get,
-    Extension, Router,
-};
+use auto_reload::restart;
+use axum::{routing::get, Extension, Router};
 
 use anyhow::Context;
 use controllers::challenges::{all_challenges, get_challenge, new_challenge};
@@ -13,6 +11,9 @@ use std::fs;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let auto_reload = std::env::args().any(|k| k == "--reload");
+    println!("Starting server.. {auto_reload}");
+
     let env = fs::read_to_string(".env").unwrap();
     let env = env.lines().find(|k| k.contains("DATABASE_URL")).unwrap();
     let (key, database_url) = env.split_once('=').unwrap();
@@ -33,10 +34,18 @@ async fn main() -> anyhow::Result<()> {
         .layer(Extension(pool));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
-    axum::serve(listener, app)
-        .with_graceful_shutdown(auto_reload::wait_reload())
-        .await
-        .unwrap();
-    //println!("edit");
+    let server = axum::serve(listener, app);
+    if auto_reload {
+        server
+            .with_graceful_shutdown(auto_reload::wait_reload())
+            .await
+            .unwrap();
+    } else {
+        server.await.unwrap();
+    }
+    println!("Reloading...");
+    if auto_reload {
+        restart().await;
+    }
     Ok(())
 }
