@@ -17,6 +17,7 @@ pub struct Message {
     lang: String,
     version: String,
     code: String,
+    judge: String,
 }
 
 // fn main() {

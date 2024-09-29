@@ -12,10 +12,8 @@ use crate::{
 
 #[derive(Serialize)]
 pub struct RunLangOutput {
-    #[serde(with = "serde_bytes")]
-    stdout: Vec<u8>,
-    #[serde(with = "serde_bytes")]
-    stderr: Vec<u8>,
+    stdout: String,
+    stderr: String,
 }
 
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
@@ -66,13 +64,7 @@ async fn install_lang(
     Ok(())
 }
 
-async fn run_lang(
-    lang_name: String,
-    version: String,
-    code: String,
-) -> Result<RunLangOutput, RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
-
+async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunProcessError> {
     let lang_folder = Command::new("asdf")
         .args(["where", lang.name, &version])
         .stderr(Stdio::inherit())
@@ -85,15 +77,31 @@ async fn run_lang(
     }
 
     let buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
+    return Ok(buff);
+}
 
-    let temp_directory = tempfile::TempDir::new()?;
-    let path = temp_directory.path().join("file");
-    let mut tmp_file = OpenOptions::new()
-        .create_new(true)
-        .write(true)
-        .open(&path)?;
-    tmp_file.write_all(code.as_bytes())?;
-    tmp_file.flush()?;
+async fn run_lang(
+    lang_name: &str,
+    version: &str,
+    code: &str,
+    judge: &str,
+    judge_lang: &str,
+    judge_version: &str,
+) -> Result<RunLangOutput, RunProcessError> {
+    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
+    let judge_lang = LANGS.iter().find(|k| k.name == judge_lang).unwrap();
+
+    let code_lang_folder = get_lang_directory(lang, version).await?;
+    let judge_lang_folder = get_lang_directory(judge_lang, judge_version).await?;
+
+    // let temp_directory = tempfile::TempDir::new()?;
+    // let path = temp_directory.path().join("file");
+    // let mut tmp_file = OpenOptions::new()
+    //     .create_new(true)
+    //     .write(true)
+    //     .open(&path)?;
+    // tmp_file.write_all(code.as_bytes())?;
+    // tmp_file.flush()?;
 
     let mut command = Command::new("bwrap");
     command
@@ -115,19 +123,30 @@ async fn run_lang(
             "--ro-bind",
             "/lib",
             "/lib",
+            "--tmpfs",
+            "/tmp",
         ])
         .args(["--ro-bind"])
-        .arg(path)
-        .args(["/code", "--ro-bind"])
-        .arg(buff)
+        .arg(code_lang_folder)
         .args(["/lang"])
+        .args(["--ro-bind"])
+        .arg(judge_lang_folder)
+        .arg("/judge")
+        .args(["--ro-bind", "/scripts", "/scripts"])
         .args(["--unshare-all", "--new-session"]);
 
-    for (key, value) in lang.env {
+    for (key, value) in judge_lang.env {
         command.args(["--setenv", *key, *value]);
     }
 
-    command.arg(lang.bin_location).arg("/code");
+    command
+        .arg(format!("/judge/{}", judge_lang.bin_location))
+        .arg("/scripts/runner.js")
+        .args([
+            &format!("/lang/{}", lang.bin_location),
+            &code as &str,
+            &judge,
+        ]);
 
     let output = command.output().await?;
 
@@ -137,8 +156,8 @@ async fn run_lang(
     stderr.truncate(1000);
 
     Ok(RunLangOutput {
-        stdout: stdout,
-        stderr: stderr,
+        stdout: String::from_utf8_lossy(&stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&stderr).into_owned(),
     })
 }
 
@@ -146,12 +165,24 @@ pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<RunLangOutput, RunLangError> {
+    // Runner Lang
+    install_lang("nodejs".to_owned(), "22.9.0", lang_versions)
+        .await
+        .map_err(|e| RunLangError::PluginInstallFailure(e))?;
+
     install_lang(message.lang.clone(), &message.version, lang_versions)
         .await
         .map_err(|e| RunLangError::PluginInstallFailure(e))?;
-    let output = run_lang(message.lang, message.version, message.code)
-        .await
-        .map_err(|k| RunLangError::RunLangError(k))?;
+    let output = run_lang(
+        &message.lang,
+        &message.version,
+        &message.code,
+        &message.judge,
+        "nodejs",
+        "22.9.0",
+    )
+    .await
+    .map_err(|k| RunLangError::RunLangError(k))?;
     Ok(output)
 }
 

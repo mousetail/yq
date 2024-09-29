@@ -8,13 +8,13 @@ pub struct Lang {
 pub const LANGS: &'static [Lang] = &[
     Lang {
         name: "nodejs",
-        bin_location: "/lang/bin/node",
+        bin_location: "/bin/node",
         plugin: "https://github.com/asdf-vm/asdf-nodejs.git",
         env: &[],
     },
     Lang {
         name: "python",
-        bin_location: "/lang/bin/python",
+        bin_location: "/bin/python",
         plugin: "https://github.com/asdf-community/asdf-python.git",
         env: &[("LD_LIBRARY_PATH", "/lang/lib")],
     },
