@@ -10,6 +10,7 @@ use cachemap::CacheMap;
 use error::RunLangError;
 use run::{get_lang_versions, process_message, RunLangOutput};
 use serde::{Deserialize, Serialize};
+use tokio::signal;
 
 #[derive(Serialize, Debug, Deserialize)]
 pub struct Message {
@@ -56,6 +57,7 @@ pub struct Message {
 
 #[tokio::main]
 async fn main() {
+    println!("Starting server");
     // initialize tracing
     tracing_subscriber::fmt::init();
 
@@ -69,7 +71,12 @@ async fn main() {
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+
+    println!("Server Clean Exit");
 }
 
 async fn root() -> &'static str {
@@ -83,4 +90,28 @@ async fn handle_message(
 ) -> Result<Json<RunLangOutput>, RunLangError> {
     let result = process_message(message.0, &lang_versions.0).await?;
     return Ok(Json(result));
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }

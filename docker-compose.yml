@@ -7,7 +7,8 @@ services:
       - "3000:3000"
     volumes:
       - ./target/debug:/debug
-    entrypoint: ['/debug/lang-runner']
+      - ./scripts:/scripts
+    entrypoint: ['/scripts/auto-reload.sh', '/debug/lang-runner']
   postgres:
     image: 'postgres:latest'
     ports:
