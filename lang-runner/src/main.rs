@@ -7,8 +7,9 @@ use std::sync::Arc;
 
 use axum::{extract::State, routing::get, Json, Router};
 use cachemap::CacheMap;
+use common::RunLangOutput;
 use error::RunLangError;
-use run::{get_lang_versions, process_message, RunLangOutput};
+use run::{get_lang_versions, process_message};
 use serde::{Deserialize, Serialize};
 use tokio::signal;
 

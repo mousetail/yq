@@ -1,13 +1,17 @@
 mod controllers;
 mod models;
+mod test_solution;
 
 use axum::{
-    routing::{get, post},
+    routing::get,
     Extension, Router,
 };
 
 use anyhow::Context;
-use controllers::challenges::{all_challenges, get_challenge, new_challenge};
+use controllers::{
+    challenges::{all_challenges, get_challenge, new_challenge},
+    solution::{all_solutions, get_solution, new_solution},
+};
 use sqlx::postgres::PgPoolOptions;
 use std::fs;
 use tokio::signal;
@@ -31,6 +35,8 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(all_challenges).post(new_challenge))
         .route("/:id", get(get_challenge))
+        .route("/:id/solutions", get(all_solutions).post(new_solution))
+        .route("/:id/solutions/:solution_id", get(get_solution))
         .layer(Extension(pool));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();

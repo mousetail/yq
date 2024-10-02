@@ -1,7 +1,8 @@
-use std::{fs::OpenOptions, io::Write, path::PathBuf, process::Stdio};
+use std::{path::PathBuf, process::Stdio};
 
 use async_process::Command;
-use serde::Serialize;
+use common::{JudgeResult, RunLangOutput, TestCase};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     cachemap::CacheMap,
@@ -9,12 +10,6 @@ use crate::{
     langs::{Lang, LANGS},
     Message,
 };
-
-#[derive(Serialize)]
-pub struct RunLangOutput {
-    stdout: String,
-    stderr: String,
-}
 
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
     let plugin_install_output = Command::new("asdf")
@@ -156,9 +151,40 @@ async fn run_lang(
     stderr.truncate(1000);
 
     Ok(RunLangOutput {
-        stdout: String::from_utf8_lossy(&stdout).into_owned(),
         stderr: String::from_utf8_lossy(&stderr).into_owned(),
+        tests: parse_output(&stdout),
     })
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FinalVerdict {
+    pass: bool,
+}
+
+fn parse_output(out: &[u8]) -> JudgeResult {
+    let mut test_cases = vec![];
+    let mut pass = false;
+    for line in out.split(|&k| k == b'\n') {
+        if line.is_empty() {
+            continue;
+        }
+        match serde_json::from_slice::<TestCase>(line) {
+            Ok(test_case) => test_cases.push(test_case),
+            Err(_) => match serde_json::from_slice::<FinalVerdict>(line) {
+                Ok(FinalVerdict { pass: new_pass }) => pass = new_pass,
+                Err(_e) => test_cases.push(TestCase {
+                    name: Some("Judge Debug Message".to_owned()),
+                    pass: common::TestPassState::Info,
+                    result_display: common::ResultDisplay::Text(
+                        String::from_utf8_lossy(line).to_string(),
+                    ),
+                    error: None,
+                }),
+            },
+        }
+    }
+
+    return JudgeResult { pass, test_cases };
 }
 
 pub async fn process_message(

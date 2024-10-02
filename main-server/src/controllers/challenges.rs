@@ -1,7 +1,10 @@
 use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, Json};
 use sqlx::PgPool;
 
-use crate::models::challenge::{self, Challenge, InsertedId, NewChallenge};
+use crate::models::{
+    challenge::{Challenge, NewChallenge},
+    InsertedId,
+};
 
 pub async fn all_challenges(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
     let sql = "SELECT * FROM challenges";
@@ -17,13 +20,7 @@ pub async fn get_challenge(
     Path(id): Path<i32>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<Json<Challenge>, ()> {
-    let sql = "SELECT * FROM challenges WHERE id=$1".to_string();
-
-    let challenge: Challenge = sqlx::query_as(&sql)
-        .bind(id)
-        .fetch_one(&pool)
-        .await
-        .map_err(|_| ())?;
+    let challenge = Challenge::get_by_id(&pool, id).await?;
 
     Ok(Json(challenge))
 }

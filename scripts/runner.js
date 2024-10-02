@@ -5,15 +5,16 @@ const { execFile } = require('node:child_process');
 const [, , execute, code, judge] = argv;
 
 class TestCase {
-    __construct(pass, expectedOutput, actualOutput) {
-        this.pass = pass
-        this.expectedOutput = expectedOutput;
-        this.actualOutput = actualOutput;
+    constructor(name, pass, result_display, error) {
+        this.name = name;
+        this.pass = pass;
+        this.result_display = result_display;
+        this.error = error;
     }
 }
 
-class FinalVerdit {
-    __construct(pass) {
+class FinalVerdict {
+    constructor(pass) {
         this.pass = pass;
     }
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 
 #[derive(sqlx::FromRow, Deserialize, Serialize)]
 pub struct NewChallenge {
@@ -14,5 +15,16 @@ pub struct Challenge {
     pub challenge: NewChallenge,
 }
 
-#[derive(sqlx::FromRow, Deserialize, Serialize)]
-pub struct InsertedId(pub i32);
+impl Challenge {
+    pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Challenge, ()> {
+        let sql = "SELECT * FROM challenges WHERE id=$1".to_string();
+
+        let challenge: Challenge = sqlx::query_as(&sql)
+            .bind(id)
+            .fetch_one(pool)
+            .await
+            .map_err(|_| ())?;
+
+        return Ok(challenge);
+    }
+}
