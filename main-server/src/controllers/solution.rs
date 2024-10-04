@@ -3,6 +3,7 @@ use common::RunLangOutput;
 use sqlx::PgPool;
 
 use crate::{
+    auto_output_format::{AutoOutputFormat, Format},
     models::{
         challenge::Challenge,
         solutions::{NewSolution, Solution},
@@ -13,8 +14,9 @@ use crate::{
 
 pub async fn all_solutions(
     Path(challenge_id): Path<i32>,
+    format: Format,
     Extension(pool): Extension<PgPool>,
-) -> impl IntoResponse {
+) -> AutoOutputFormat<Vec<Solution>> {
     let sql = "SELECT id, language, version, challenge, code FROM solutions WHERE challenge=$1";
     let solutions = sqlx::query_as::<_, Solution>(&sql)
         .bind(challenge_id)
@@ -22,7 +24,7 @@ pub async fn all_solutions(
         .await
         .unwrap();
 
-    (StatusCode::OK, Json(solutions))
+    AutoOutputFormat::new(solutions, "index.html.jinja", format)
 }
 
 pub async fn get_solution(

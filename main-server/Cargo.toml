@@ -16,3 +16,4 @@ tokio = { version = "1.40.0", features = ["rt-multi-thread", "signal"] }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 reqwest = { version = "0.12", features = ["json", "rustls-tls", "http2"], default_features=false }
 common = {path = "../common" }
+tera = "1.20.0"

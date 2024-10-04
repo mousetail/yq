@@ -1,3 +1,4 @@
+mod auto_output_format;
 mod controllers;
 mod models;
 mod test_solution;
