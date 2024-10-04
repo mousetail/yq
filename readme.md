@@ -2,11 +2,12 @@ To run:
 
 First time:
 ```bash
-cargo build
-docker build -t yg
-docker run -v `realpath target/debug`:/debug -it --name yg --security-opt seccomp=unconfined yg
+docker compose up
+# Setup the development database
+cargo install sqlx-cli --no-default-features --features rustls,postgres
+sqlx migrate up
 ```
 When running again you can just do
 ```bash
-docker container start -a yg
+docker container kill --signal USR1 yet-to-be-named-golfing-site-yq-runner-1
 ```

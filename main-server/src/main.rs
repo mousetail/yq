@@ -2,10 +2,7 @@ mod controllers;
 mod models;
 mod test_solution;
 
-use axum::{
-    routing::get,
-    Extension, Router,
-};
+use axum::{routing::get, Extension, Router};
 
 use anyhow::Context;
 use controllers::{
