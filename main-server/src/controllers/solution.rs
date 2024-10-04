@@ -15,7 +15,7 @@ pub async fn all_solutions(
     Path(challenge_id): Path<i32>,
     Extension(pool): Extension<PgPool>,
 ) -> impl IntoResponse {
-    let sql = "SELECT id, language, version, challenge, code FROM challenges WHERE challenge=$1";
+    let sql = "SELECT id, language, version, challenge, code FROM solutions WHERE challenge=$1";
     let solutions = sqlx::query_as::<_, Solution>(&sql)
         .bind(challenge_id)
         .fetch_all(&pool)
