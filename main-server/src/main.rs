@@ -1,5 +1,6 @@
 mod auto_output_format;
 mod controllers;
+mod error;
 mod models;
 mod test_solution;
 
@@ -33,8 +34,11 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(all_challenges).post(new_challenge))
         .route("/:id", get(get_challenge))
-        .route("/:id/solutions", get(all_solutions).post(new_solution))
-        .route("/:id/solutions/:solution_id", get(get_solution))
+        .route(
+            "/:id/solutions/:language",
+            get(all_solutions).post(new_solution),
+        )
+        .route("/:id/solutions/:language/:solution_id", get(get_solution))
         .layer(Extension(pool));
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();

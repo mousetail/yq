@@ -1,13 +1,15 @@
 use std::{path::PathBuf, process::Stdio};
 
 use async_process::Command;
-use common::{JudgeResult, RunLangOutput, TestCase};
+use common::{
+    langs::{Lang, LANGS},
+    JudgeResult, RunLangOutput, TestCase,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     cachemap::CacheMap,
     error::{RunLangError, RunProcessError},
-    langs::{Lang, LANGS},
     Message,
 };
 

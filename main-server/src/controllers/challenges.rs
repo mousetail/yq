@@ -1,9 +1,12 @@
 use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, Json};
 use sqlx::PgPool;
 
-use crate::models::{
-    challenge::{Challenge, NewChallenge},
-    InsertedId,
+use crate::{
+    error::Error,
+    models::{
+        challenge::{Challenge, NewChallenge},
+        InsertedId,
+    },
 };
 
 pub async fn all_challenges(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
@@ -19,7 +22,7 @@ pub async fn all_challenges(Extension(pool): Extension<PgPool>) -> impl IntoResp
 pub async fn get_challenge(
     Path(id): Path<i32>,
     Extension(pool): Extension<PgPool>,
-) -> Result<Json<Challenge>, ()> {
+) -> Result<Json<Challenge>, Error> {
     let challenge = Challenge::get_by_id(&pool, id).await?;
 
     Ok(Json(challenge))

@@ -1,0 +1,80 @@
+{% extends "base/base.html.jinja" %}
+
+{% block content %}
+    <h1>{{ object.challenge.challenge.name }}</h1>
+
+    <div class="leaderboard">
+      <table>
+        <tr>
+          <th>Language</th>
+          <th>Id</th>
+        </tr>
+        {% for solution in object.solutions%}
+          <tr>
+            <td>{{ solution.language }}</td>
+            <td>{{ solution.id }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div>
+      {{ object.challenge.challenge.description}}
+    </div>
+
+    <form method="POST">
+
+      <textarea name="code"></textarea>
+
+      <button type="submit">Submit!</button>
+    </form>
+
+    {% if object.tests%}
+      {% if object.tests.tests.pass%}
+        Pass
+      {% else %}
+        Fail
+      {% endif %}
+      
+      <pre>{{ object.tests.stderr }}</pre>
+
+      {% for test in object.tests.tests.test_cases %}
+        <div class="test-case">
+          {% if test.name %}
+            <h2>
+              {{ test.name }}
+            </h2>
+          {% endif %}
+
+          {% if test.pass == "Pass"%}
+            Pass
+          {% elif test.pass == "Fail" %}
+            Fail
+          {% elif test.pass == "Warning"%}
+            Warning
+          {% elif test.pass == "Info" %}
+            Info
+          {% endif %}
+
+          {% if test.result_display.Empty %}
+
+          {% elif test.result_display.Text %}
+            <div class="results">
+              {{ test.result_display.Text }}
+            </div>
+          {% elif test.result_display.Diff %}
+            <div class="diff">
+              <div id="column">
+                <h3>Output</h3>
+                <pre>{{ test.result_display.Diff.output }}</pre>
+              </div>
+              <div id="column">
+                <h3>Expected</h3>
+                <pre>{{ test.result_display.Diff.expected }}</pre>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
+{% endblock content %}

@@ -13,14 +13,16 @@ struct TestRunnerRequest<'a> {
 
 pub async fn test_solution(
     solution: &NewSolution,
+    language: &str,
+    version: &str,
     challenge: &Challenge,
 ) -> reqwest::Result<RunLangOutput> {
     let client = reqwest::Client::new();
     let resp = client
         .post("http://localhost:3000")
         .json(&TestRunnerRequest {
-            lang: &solution.language,
-            version: &solution.version,
+            lang: &language,
+            version: &version,
             code: &solution.code,
             judge: &challenge.challenge.judge,
         })
