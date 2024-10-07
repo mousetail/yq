@@ -4,8 +4,26 @@ use reqwest::StatusCode;
 #[derive(Debug)]
 pub enum Error {
     NotFound,
-    #[allow(unused)]
     ServerError,
+    OauthError(OauthError),
+}
+
+#[derive(Debug)]
+pub enum OauthError {
+    TokenExchangeFailed,
+    UserInfoFetchFailed,
+    DeserializationFailed,
+    CsrfValidationFailed,
+}
+
+impl IntoResponse for OauthError {
+    fn into_response(self) -> axum::response::Response {
+        Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .header("Content-Type", "Text/Plain")
+            .body(Body::from(format!("{self:?}")))
+            .unwrap()
+    }
 }
 
 impl IntoResponse for Error {
@@ -19,6 +37,7 @@ impl IntoResponse for Error {
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Body::empty())
                 .unwrap(),
+            Error::OauthError(oauth_error) => oauth_error.into_response(),
         }
     }
 }
