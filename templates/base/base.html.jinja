@@ -2,11 +2,53 @@
 <html>
 <head>
 
-{% block head %}
-{% endblock %}
+    {% block head %}
+    {% endblock %}
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+        }
+
+        .header {
+            width: 100%;
+            border-bottom: 1px solid black;
+            display: flex;
+            justify-content: end;
+            padding: 0.5rem;
+            height: 2rem;
+        }
+
+        .header img {
+            width: 2rem;
+            height: 2rem;
+            margin-left: 1rem;
+        }
+
+        .content {
+            padding: 1rem;
+        }
+    </style>
 </head>
 <body>
-{% block content %}
-{% endblock%}
+    <div class="header">
+        {% if account %}
+            {{ account.username}}
+            <img src="{{account.avatar}}">
+        {% else %}
+            <a href="/login/github">Login</a>
+        {% endif %}
+    </div>
+
+    <div class="content">
+        {% block content %}
+        {% endblock%}
+    </div>
 </body>
 </html>

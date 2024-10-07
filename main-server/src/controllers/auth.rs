@@ -1,7 +1,7 @@
 use std::env;
 
 use axum::extract::Query;
-use axum::response::Redirect;
+use axum::response::{IntoResponse, Redirect, Response};
 use axum::Extension;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::{
@@ -9,6 +9,7 @@ use oauth2::{
     EndpointNotSet, EndpointSet, RedirectUrl, Scope, StandardTokenResponse, TokenResponse,
     TokenUrl,
 };
+use reqwest::StatusCode;
 use serde::Deserialize;
 use sqlx::prelude::FromRow;
 use sqlx::{PgPool, Pool, Postgres};
@@ -18,7 +19,7 @@ use crate::error::Error;
 use crate::models::InsertedId;
 
 const GITHUB_SESSION_CSRF_KEY: &'static str = "GITHUB_SESSION_CSRF_TOKEN";
-const ACCOUNT_ID_KEY: &'static str = "ACCOUNT_ID";
+pub const ACCOUNT_ID_KEY: &'static str = "ACCOUNT_ID";
 
 fn create_github_client(
 ) -> BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet> {
@@ -83,7 +84,7 @@ pub async fn github_callback(
     session: Session,
     Extension(pool): Extension<PgPool>,
     Query(token): Query<GithubResponse>,
-) -> Result<String, Error> {
+) -> Result<Response, Error> {
     let client = create_github_client();
 
     let http_client = reqwest::ClientBuilder::new()
@@ -131,10 +132,14 @@ pub async fn github_callback(
             .map_err(|_k| Error::OauthError(crate::error::OauthError::DeserializationFailed))?;
 
         insert_user(&pool, &user_info, &token_res, &session).await;
-        Ok(format!("{user_info:?}"))
+        Ok(Redirect::temporary("/").into_response())
     } else {
         let data = response.bytes().await.unwrap();
-        return Ok(String::from_utf8_lossy(&data).to_string());
+        Ok((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            String::from_utf8_lossy(&data).to_string(),
+        )
+            .into_response())
     }
 }
 

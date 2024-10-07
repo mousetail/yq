@@ -1,0 +1,10 @@
+{% extends "base/base.html.jinja" %}
+
+{% block content %}
+    <h1>Challenges</h1>
+    <ul>
+        {% for challenge in object.challenges %}
+            <li><a href="/{{ challenge.id }}/python">{{ challenge.challenge.name }}</a></li>
+        {% endfor %}
+    </ul>
+{% endblock%}

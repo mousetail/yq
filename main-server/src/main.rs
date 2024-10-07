@@ -10,7 +10,7 @@ use axum::{routing::get, Extension, Router};
 use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
-    challenges::{all_challenges, get_challenge, new_challenge},
+    challenges::{all_challenges, new_challenge},
     solution::{all_solutions, get_solution, new_solution},
 };
 use sqlx::postgres::PgPoolOptions;
@@ -42,7 +42,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Setup Sessions
     let session_store = MemoryStore::default();
-    let session_layer = SessionManagerLayer::new(session_store.clone())
+    let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_name("yq_session_store_id")
@@ -50,12 +50,8 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(all_challenges).post(new_challenge))
-        .route("/:id", get(get_challenge))
-        .route(
-            "/:id/solutions/:language",
-            get(all_solutions).post(new_solution),
-        )
-        .route("/:id/solutions/:language/:solution_id", get(get_solution))
+        .route("/:id/:language", get(all_solutions).post(new_solution))
+        .route("/:id/:language/:solution_id", get(get_solution))
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
@@ -67,8 +63,6 @@ async fn main() -> anyhow::Result<()> {
         .with_graceful_shutdown(shutdown_signal())
         .await
         .unwrap();
-
-    println!("Session store final state {session_store:?}");
     Ok(())
 }
 

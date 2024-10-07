@@ -15,18 +15,35 @@ use reqwest::StatusCode;
 use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, Context, Tera};
 
-pub enum Format {
-    Json,
-    Html,
+use crate::models::account::Account;
+
+#[derive(Serialize)]
+pub struct HtmlContext {
+    account: Option<Account>,
 }
 
 #[async_trait]
-impl<S> FromRequestParts<S> for Format {
+impl<S: Send + Sync> FromRequestParts<S> for HtmlContext {
+    type Rejection = Infallible;
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let account = Account::from_request_parts(parts, state).await.ok();
+
+        return Ok(HtmlContext { account });
+    }
+}
+
+pub enum Format {
+    Json,
+    Html(Box<HtmlContext>),
+}
+
+#[async_trait]
+impl<S: Send + Sync> FromRequestParts<S> for Format {
     #[doc = " If the extractor fails it\'ll use this \"rejection\" type. A rejection is"]
     #[doc = " a kind of error that can be converted into a response."]
     type Rejection = Infallible;
 
-    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
         if parts
             .uri
             .path_and_query()
@@ -41,7 +58,9 @@ impl<S> FromRequestParts<S> for Format {
         }) {
             return Ok(Format::Json);
         } else {
-            return Ok(Format::Html);
+            return Ok(Format::Html(Box::new(
+                HtmlContext::from_request_parts(parts, state).await?,
+            )));
         }
     }
 }
@@ -67,7 +86,12 @@ impl<T: Serialize> AutoOutputFormat<T> {
         AutoOutputFormat { status, ..self }
     }
 
-    fn create_html_response(&self) -> axum::response::Response {
+    fn create_html_response(
+        data: T,
+        template: &'static str,
+        status: StatusCode,
+        html_context: &HtmlContext,
+    ) -> axum::response::Response {
         let value = (&TERA).get_or_init(|| {
             let tera = Tera::new("templates/**/*.jinja");
             return tera;
@@ -89,11 +113,12 @@ impl<T: Serialize> AutoOutputFormat<T> {
         };
 
         let mut context = Context::new();
-        context.insert("object", &self.data);
+        context.insert("object", &data);
+        context.insert("account", &html_context.account);
 
-        let html = tera.render(&self.template, &context).unwrap();
+        let html = tera.render(template, &context).unwrap();
         return Response::builder()
-            .status(self.status)
+            .status(status)
             .body(axum::body::Body::from(html))
             .unwrap();
     }
@@ -110,7 +135,9 @@ static TERA: OnceLock<tera::Result<Tera>> = OnceLock::new();
 impl<T: Serialize> IntoResponse for AutoOutputFormat<T> {
     fn into_response(self) -> axum::response::Response {
         match self.format {
-            Format::Html => self.create_html_response(),
+            Format::Html(context) => {
+                Self::create_html_response(self.data, self.template, self.status, &context)
+            }
             Format::Json => self.create_json_response(),
         }
     }

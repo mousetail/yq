@@ -1,31 +1,37 @@
-use axum::{extract::Path, http::StatusCode, response::IntoResponse, Extension, Json};
+use axum::{http::StatusCode, Extension, Json};
+use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
-    error::Error,
+    auto_output_format::{AutoOutputFormat, Format},
     models::{
         challenge::{Challenge, NewChallenge},
         InsertedId,
     },
 };
 
-pub async fn all_challenges(Extension(pool): Extension<PgPool>) -> impl IntoResponse {
+#[derive(Serialize)]
+pub struct AllChallengesOutput {
+    challenges: Vec<Challenge>,
+}
+
+pub async fn all_challenges(
+    Extension(pool): Extension<PgPool>,
+    format: Format,
+) -> AutoOutputFormat<AllChallengesOutput> {
     let sql = "SELECT * FROM challenges";
     let challenges = sqlx::query_as::<_, Challenge>(&sql)
         .fetch_all(&pool)
         .await
         .unwrap();
 
-    (StatusCode::OK, Json(challenges))
-}
-
-pub async fn get_challenge(
-    Path(id): Path<i32>,
-    Extension(pool): Extension<PgPool>,
-) -> Result<Json<Challenge>, Error> {
-    let challenge = Challenge::get_by_id(&pool, id).await?;
-
-    Ok(Json(challenge))
+    AutoOutputFormat::new(
+        AllChallengesOutput {
+            challenges: challenges,
+        },
+        "home.html.jinja",
+        format,
+    )
 }
 
 #[axum::debug_handler]
