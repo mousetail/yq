@@ -18,8 +18,8 @@ use tower_sessions::Session;
 use crate::error::Error;
 use crate::models::InsertedId;
 
-const GITHUB_SESSION_CSRF_KEY: &'static str = "GITHUB_SESSION_CSRF_TOKEN";
-pub const ACCOUNT_ID_KEY: &'static str = "ACCOUNT_ID";
+const GITHUB_SESSION_CSRF_KEY: &str = "GITHUB_SESSION_CSRF_TOKEN";
+pub const ACCOUNT_ID_KEY: &str = "ACCOUNT_ID";
 
 fn create_github_client(
 ) -> BasicClient<EndpointSet, EndpointNotSet, EndpointNotSet, EndpointNotSet, EndpointSet> {
@@ -36,16 +36,16 @@ fn create_github_client(
         .expect("Invalid token endpoint URL");
 
     // Set up the config for the Github OAuth2 process.
-    let client = BasicClient::new(github_client_id)
+    
+
+    BasicClient::new(github_client_id)
         .set_client_secret(github_client_secret)
         .set_auth_uri(auth_url)
         .set_token_uri(token_url)
         .set_redirect_uri(
             RedirectUrl::new("http://localhost:3001/callback/github".to_string())
                 .expect("Invalid redirect URL"),
-        );
-
-    return client;
+        )
 }
 
 #[axum::debug_handler]
@@ -59,7 +59,7 @@ pub async fn github_login(session: Session) -> Redirect {
         .url();
 
     session
-        .insert(&GITHUB_SESSION_CSRF_KEY, csrf_state)
+        .insert(GITHUB_SESSION_CSRF_KEY, csrf_state)
         .await
         .unwrap();
 
@@ -96,7 +96,7 @@ pub async fn github_callback(
     let GithubResponse { code, state } = token;
 
     if !session
-        .get(&GITHUB_SESSION_CSRF_KEY)
+        .get(GITHUB_SESSION_CSRF_KEY)
         .await
         .ok()
         .and_then(|b| b)
@@ -157,7 +157,7 @@ async fn insert_user(
 ) {
     let sql = "SELECT id, account FROM account_oauth_codes WHERE id_on_provider=$1";
 
-    let user: Option<UserQueryResponse> = sqlx::query_as::<_, UserQueryResponse>(&sql)
+    let user: Option<UserQueryResponse> = sqlx::query_as::<_, UserQueryResponse>(sql)
         .bind(github_user.id)
         .fetch_optional(pool)
         .await
@@ -167,24 +167,24 @@ async fn insert_user(
         let sql: &str =
             "UPDATE account_oauth_codes SET access_token=$1, refresh_token=$2 WHERE id=$3";
 
-        sqlx::query_as::<_, UserQueryResponse>(&sql)
+        sqlx::query_as::<_, UserQueryResponse>(sql)
             .bind(token.access_token().secret())
             .bind(
                 token
                     .refresh_token()
                     .map(|d| d.secret().as_str())
-                    .unwrap_or(&""),
+                    .unwrap_or(""),
             )
             .bind(user.id)
             .fetch_optional(pool)
             .await
             .unwrap();
 
-        session.insert(&ACCOUNT_ID_KEY, user.account).await.unwrap();
+        session.insert(ACCOUNT_ID_KEY, user.account).await.unwrap();
     } else {
         let sql: &str = "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id";
 
-        let new_user_id: InsertedId = sqlx::query_as(&sql)
+        let new_user_id: InsertedId = sqlx::query_as(sql)
             .bind(&github_user.login)
             .bind(&github_user.avatar_url)
             .fetch_one(pool)
@@ -195,14 +195,14 @@ async fn insert_user(
             "INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
         ($1, $2, $3, $4)";
 
-        sqlx::query(&sql)
+        sqlx::query(sql)
             .bind(new_user_id.0)
             .bind(token.access_token().secret())
             .bind(
                 token
                     .refresh_token()
                     .map(|d| d.secret().as_str())
-                    .unwrap_or(&""),
+                    .unwrap_or(""),
             )
             .bind(github_user.id)
             .execute(pool)
@@ -210,7 +210,7 @@ async fn insert_user(
             .unwrap();
 
         session
-            .insert(&ACCOUNT_ID_KEY, new_user_id.0)
+            .insert(ACCOUNT_ID_KEY, new_user_id.0)
             .await
             .unwrap();
     }

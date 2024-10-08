@@ -27,6 +27,6 @@ impl Challenge {
             .await
             .map_err(|_| Error::NotFound)?;
 
-        return Ok(challenge);
+        Ok(challenge)
     }
 }

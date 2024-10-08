@@ -29,7 +29,7 @@ async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessE
 
 async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunProcessError> {
     let output = Command::new("asdf")
-        .args(["install", lang.name, &version])
+        .args(["install", lang.name, version])
         .stderr(Stdio::inherit())
         .output()
         .await?;
@@ -63,7 +63,7 @@ async fn install_lang(
 
 async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunProcessError> {
     let lang_folder = Command::new("asdf")
-        .args(["where", lang.name, &version])
+        .args(["where", lang.name, version])
         .stderr(Stdio::inherit())
         .output()
         .await?;
@@ -74,7 +74,7 @@ async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunPr
     }
 
     let buff = PathBuf::from(String::from_utf8(lang_folder.stdout).unwrap().trim());
-    return Ok(buff);
+    Ok(buff)
 }
 
 async fn run_lang(
@@ -141,8 +141,8 @@ async fn run_lang(
         .arg("/scripts/runner.js")
         .args([
             &format!("/lang/{}", lang.bin_location),
-            &code as &str,
-            &judge,
+            code as &str,
+            judge,
         ]);
 
     let output = command.output().await?;
@@ -186,7 +186,7 @@ fn parse_output(out: &[u8]) -> JudgeResult {
         }
     }
 
-    return JudgeResult { pass, test_cases };
+    JudgeResult { pass, test_cases }
 }
 
 pub async fn process_message(
@@ -196,11 +196,11 @@ pub async fn process_message(
     // Runner Lang
     install_lang("nodejs".to_owned(), "22.9.0", lang_versions)
         .await
-        .map_err(|e| RunLangError::PluginInstallFailure(e))?;
+        .map_err(RunLangError::PluginInstallFailure)?;
 
     install_lang(message.lang.clone(), &message.version, lang_versions)
         .await
-        .map_err(|e| RunLangError::PluginInstallFailure(e))?;
+        .map_err(RunLangError::PluginInstallFailure)?;
     let output = run_lang(
         &message.lang,
         &message.version,
@@ -210,7 +210,7 @@ pub async fn process_message(
         "22.9.0",
     )
     .await
-    .map_err(|k| RunLangError::RunLangError(k))?;
+    .map_err(RunLangError::RunLangError)?;
     Ok(output)
 }
 

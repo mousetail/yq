@@ -92,9 +92,9 @@ impl<T: Serialize> AutoOutputFormat<T> {
         status: StatusCode,
         html_context: &HtmlContext,
     ) -> axum::response::Response {
-        let value = (&TERA).get_or_init(|| {
-            let tera = Tera::new("templates/**/*.jinja");
-            return tera;
+        let value = TERA.get_or_init(|| {
+            
+            Tera::new("templates/**/*.jinja")
         });
 
         let tera = match value.as_ref() {
@@ -117,16 +117,16 @@ impl<T: Serialize> AutoOutputFormat<T> {
         context.insert("account", &html_context.account);
 
         let html = tera.render(template, &context).unwrap();
-        return Response::builder()
+        Response::builder()
             .status(status)
             .body(axum::body::Body::from(html))
-            .unwrap();
+            .unwrap()
     }
 
     fn create_json_response(&self) -> axum::response::Response {
         let mut response = Json(&self.data).into_response();
         *response.status_mut() = self.status;
-        return response;
+        response
     }
 }
 

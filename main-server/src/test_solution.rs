@@ -21,8 +21,8 @@ pub async fn test_solution(
     let resp = client
         .post("http://localhost:3000")
         .json(&TestRunnerRequest {
-            lang: &language,
-            version: &version,
+            lang: language,
+            version,
             code: &solution.code,
             judge: &challenge.challenge.judge,
         })

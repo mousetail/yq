@@ -23,7 +23,7 @@ impl Solution {
         language: &str,
     ) -> Vec<Self> {
         let sql = "SELECT id, language, version, challenge, code FROM solutions WHERE challenge=$1 AND language=$2";
-        sqlx::query_as::<_, Solution>(&sql)
+        sqlx::query_as::<_, Solution>(sql)
             .bind(challenge_id)
             .bind(language)
             .fetch_all(pool)

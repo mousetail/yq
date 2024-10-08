@@ -6,7 +6,7 @@ pub struct Lang {
     pub latest_version: &'static str,
 }
 
-pub const LANGS: &'static [Lang] = &[
+pub const LANGS: &[Lang] = &[
     Lang {
         name: "nodejs",
         bin_location: "/bin/node",

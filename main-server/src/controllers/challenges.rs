@@ -20,14 +20,14 @@ pub async fn all_challenges(
     format: Format,
 ) -> AutoOutputFormat<AllChallengesOutput> {
     let sql = "SELECT * FROM challenges";
-    let challenges = sqlx::query_as::<_, Challenge>(&sql)
+    let challenges = sqlx::query_as::<_, Challenge>(sql)
         .fetch_all(&pool)
         .await
         .unwrap();
 
     AutoOutputFormat::new(
         AllChallengesOutput {
-            challenges: challenges,
+            challenges,
         },
         "home.html.jinja",
         format,
@@ -44,7 +44,7 @@ pub async fn new_challenge(
     // }
     let sql = "INSERT INTO challenges (name, judge, description) values ($1, $2, $3) RETURNING id";
 
-    let InsertedId(row) = sqlx::query_as(&sql)
+    let InsertedId(row) = sqlx::query_as(sql)
         .bind(&challenge.name)
         .bind(&challenge.judge)
         .bind(&challenge.description)

@@ -75,17 +75,17 @@ pub async fn new_solution(
         .ok_or(Error::NotFound)?
         .latest_version;
 
-    let test_result = test_solution(&solution, &language_name, &version, &challenge)
+    let test_result = test_solution(&solution, &language_name, version, &challenge)
         .await
         .unwrap();
 
     if test_result.tests.pass {
         let sql = "INSERT INTO solutions (language, version, challenge, code) values ($1, $2, $3, $4) RETURNING id";
 
-        let InsertedId(_row) = sqlx::query_as(&sql)
+        let InsertedId(_row) = sqlx::query_as(sql)
             .bind(&language_name)
             .bind(version)
-            .bind(&challenge_id)
+            .bind(challenge_id)
             .bind(&solution.code)
             .fetch_one(&pool)
             .await

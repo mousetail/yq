@@ -43,9 +43,9 @@ impl From<std::io::Error> for RunLangError {
 
 impl IntoResponse for RunLangError {
     fn into_response(self) -> axum::response::Response {
-        return Response::builder()
+        Response::builder()
             .status(503)
             .body(Body::from(format!("{self:?}")))
-            .unwrap();
+            .unwrap()
     }
 }

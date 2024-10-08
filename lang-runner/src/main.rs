@@ -81,7 +81,7 @@ async fn main() {
 }
 
 async fn root() -> &'static str {
-    return "Server is working properly";
+    "Server is working properly"
 }
 
 #[axum::debug_handler]
@@ -90,7 +90,7 @@ async fn handle_message(
     message: Json<Message>,
 ) -> Result<Json<RunLangOutput>, RunLangError> {
     let result = process_message(message.0, &lang_versions.0).await?;
-    return Ok(Json(result));
+    Ok(Json(result))
 }
 
 async fn shutdown_signal() {
