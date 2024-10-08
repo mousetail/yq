@@ -6,13 +6,15 @@
     <div class="leaderboard">
       <table>
         <tr>
-          <th>Language</th>
+          <th>Author</th>
           <th>Id</th>
+          <th>Score</th>
         </tr>
-        {% for solution in object.solutions%}
+        {% for solution in object.leaderboard%}
           <tr>
-            <td>{{ solution.language }}</td>
+            <td>{{ solution.author_name }}</td>
             <td>{{ solution.id }}</td>
+            <td>{{ solution.score }}</td>
           </tr>
         {% endfor %}
       </table>

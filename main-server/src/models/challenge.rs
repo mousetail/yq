@@ -15,6 +15,7 @@ pub struct Challenge {
     pub id: i32,
     #[sqlx(flatten)]
     pub challenge: NewChallenge,
+    pub author: i32,
 }
 
 impl Challenge {

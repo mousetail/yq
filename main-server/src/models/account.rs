@@ -1,4 +1,3 @@
-
 use axum::{
     async_trait,
     body::Body,
@@ -16,9 +15,9 @@ use crate::controllers::auth::ACCOUNT_ID_KEY;
 
 #[derive(FromRow, Serialize)]
 pub struct Account {
-    id: i32,
-    username: String,
-    avatar: String,
+    pub id: i32,
+    pub username: String,
+    pub avatar: String,
 }
 
 impl Account {

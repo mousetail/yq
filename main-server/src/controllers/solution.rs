@@ -7,8 +7,9 @@ use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
     error::Error,
     models::{
+        account::Account,
         challenge::Challenge,
-        solutions::{NewSolution, Solution},
+        solutions::{LeaderboardEntry, NewSolution, Solution},
         InsertedId,
     },
     test_solution::test_solution,
@@ -17,7 +18,7 @@ use crate::{
 #[derive(Serialize)]
 pub struct AllSolutionsOutput {
     challenge: Challenge,
-    solutions: Vec<Solution>,
+    leaderboard: Vec<LeaderboardEntry>,
     tests: Option<RunLangOutput>,
 }
 
@@ -26,16 +27,19 @@ pub async fn all_solutions(
     format: Format,
     Extension(pool): Extension<PgPool>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
-    let solutions =
-        Solution::get_solutions_for_challenge_and_language(&pool, challenge_id, &language_name)
-            .await;
+    let leaderboard = LeaderboardEntry::get_leadeboard_for_challenge_and_language(
+        &pool,
+        challenge_id,
+        &language_name,
+    )
+    .await;
 
     let challenge = Challenge::get_by_id(&pool, challenge_id).await?;
 
     Ok(AutoOutputFormat::new(
         AllSolutionsOutput {
             challenge,
-            solutions,
+            leaderboard,
             tests: None,
         },
         "challenge.html.jinja",
@@ -63,6 +67,7 @@ pub async fn get_solution(
 #[axum::debug_handler]
 pub async fn new_solution(
     Path((challenge_id, language_name)): Path<(i32, String)>,
+    account: Account,
     Extension(pool): Extension<PgPool>,
     format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
@@ -80,20 +85,22 @@ pub async fn new_solution(
         .unwrap();
 
     if test_result.tests.pass {
-        let sql = "INSERT INTO solutions (language, version, challenge, code) values ($1, $2, $3, $4) RETURNING id";
+        let sql = "INSERT INTO solutions (language, version, challenge, code, author, score) values ($1, $2, $3, $4, $5, $6) RETURNING id";
 
         let InsertedId(_row) = sqlx::query_as(sql)
             .bind(&language_name)
             .bind(version)
             .bind(challenge_id)
             .bind(&solution.code)
+            .bind(account.id)
+            .bind(solution.code.len() as i32)
             .fetch_one(&pool)
             .await
             .map_err(|_| Error::ServerError)?;
         Ok(AutoOutputFormat::new(
             AllSolutionsOutput {
                 challenge,
-                solutions: Solution::get_solutions_for_challenge_and_language(
+                leaderboard: LeaderboardEntry::get_leadeboard_for_challenge_and_language(
                     &pool,
                     challenge_id,
                     &language_name,
@@ -109,7 +116,7 @@ pub async fn new_solution(
         Ok(AutoOutputFormat::new(
             AllSolutionsOutput {
                 challenge,
-                solutions: Solution::get_solutions_for_challenge_and_language(
+                leaderboard: LeaderboardEntry::get_leadeboard_for_challenge_and_language(
                     &pool,
                     challenge_id,
                     &language_name,
