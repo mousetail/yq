@@ -3,6 +3,30 @@ services:
     build: ./lang-runner
     security_opt:
       - seccomp:unconfined
+    cap_drop:
+      # I don't think this is nearly enough to fully isolate the container
+      # bubblewrap requires `pivot_root` and `umount` which seem to be extremely dangerous
+      # Except it doesn't run as root so it couldn't do anything anyway? I'm not betting anything on this though.
+      # Finding comprehesive information seems extremely difficult.
+
+      - CAP_AUDIT_CONTROL 
+      - CAP_BLOCK_SUSPEND 
+      # - CAP_BPF
+      # - CAP_CHECKPOINT_RESTORE 
+      - CAP_DAC_OVERRIDE
+      - CAP_FSETID
+      - CAP_KILL
+      - CAP_NET_ADMIN
+      - NET_BROADCAST
+      # - CAP_PERFMON
+      - CAP_SYS_BOOT
+      - CAP_SYS_MODULE
+      - CAP_SYS_NICE
+      - CAP_SYS_PTRACE
+      - CAP_SYS_PACCT
+      - CAP_SYS_TIME
+      - CAP_SYSLOG
+      - CAP_WAKE_ALARM
     ports:
       - "3000:3000"
     volumes:

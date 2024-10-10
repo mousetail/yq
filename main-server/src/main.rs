@@ -58,7 +58,13 @@ async fn main() -> anyhow::Result<()> {
         .layer(Extension(pool))
         .layer(session_layer);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3001").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&format!(
+        "{}:{}",
+        env::var("YQ_HOST").expect("Expcted YQ_HOST var to be set"),
+        env::var("YQ_PORT").expect("Excpected YQ_PORT var to be set")
+    ))
+    .await
+    .unwrap();
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await
