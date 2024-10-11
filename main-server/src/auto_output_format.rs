@@ -92,10 +92,7 @@ impl<T: Serialize> AutoOutputFormat<T> {
         status: StatusCode,
         html_context: &HtmlContext,
     ) -> axum::response::Response {
-        let value = TERA.get_or_init(|| {
-            
-            Tera::new("templates/**/*.jinja")
-        });
+        let value = TERA.get_or_init(|| Tera::new("templates/**/*.jinja"));
 
         let tera = match value.as_ref() {
             Ok(tera) => tera,

@@ -9,7 +9,7 @@ use crate::{
     models::{
         account::Account,
         challenge::Challenge,
-        solutions::{LeaderboardEntry, NewSolution, Solution},
+        solutions::{self, Code, LeaderboardEntry, NewSolution, Solution},
         InsertedId,
     },
     test_solution::test_solution,
@@ -20,11 +20,13 @@ pub struct AllSolutionsOutput {
     challenge: Challenge,
     leaderboard: Vec<LeaderboardEntry>,
     tests: Option<RunLangOutput>,
+    code: Option<String>,
 }
 
 pub async fn all_solutions(
     Path((challenge_id, language_name)): Path<(i32, String)>,
     format: Format,
+    account: Option<Account>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
     let leaderboard = LeaderboardEntry::get_leadeboard_for_challenge_and_language(
@@ -35,12 +37,19 @@ pub async fn all_solutions(
     .await;
 
     let challenge = Challenge::get_by_id(&pool, challenge_id).await?;
+    let code = match account {
+        Some(account) => {
+            Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await
+        }
+        None => None,
+    };
 
     Ok(AutoOutputFormat::new(
         AllSolutionsOutput {
             challenge,
             leaderboard,
             tests: None,
+            code: code.map(|d| d.code),
         },
         "challenge.html.jinja",
         format,
@@ -83,50 +92,62 @@ pub async fn new_solution(
     let test_result = test_solution(&solution, &language_name, version, &challenge)
         .await
         .unwrap();
+    let previous_code =
+        Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 
-    if test_result.tests.pass {
-        let sql = "INSERT INTO solutions (language, version, challenge, code, author, score) values ($1, $2, $3, $4, $5, $6) RETURNING id";
-
-        let InsertedId(_row) = sqlx::query_as(sql)
-            .bind(&language_name)
-            .bind(version)
-            .bind(challenge_id)
-            .bind(&solution.code)
-            .bind(account.id)
-            .bind(solution.code.len() as i32)
-            .fetch_one(&pool)
-            .await
-            .map_err(|_| Error::ServerError)?;
-        Ok(AutoOutputFormat::new(
-            AllSolutionsOutput {
-                challenge,
-                leaderboard: LeaderboardEntry::get_leadeboard_for_challenge_and_language(
-                    &pool,
+    let status = if test_result.tests.pass {
+        match previous_code {
+            None => {
+                sqlx::query!(
+                    "INSERT INTO solutions (language, version, challenge, code, author, score) values ($1, $2, $3, $4, $5, $6)",
+                    language_name,
+                    version,
                     challenge_id,
-                    &language_name,
+                    solution.code,
+                    account.id,
+                    solution.code.len() as i32,
                 )
-                .await,
-                tests: Some(test_result),
-            },
-            "challenge.html.jinja",
-            format,
-        )
-        .with_status(StatusCode::BAD_REQUEST))
+                .execute(&pool)
+                .await
+                .map_err(|_| Error::ServerError)?;
+
+                StatusCode::CREATED
+            }
+            Some(w) if w.score >= solution.code.len() as i32 => {
+                sqlx::query!(
+                    "UPDATE solutions SET 
+                        code=$1,
+                        score=$2
+                    WHERE id=$3",
+                    solution.code,
+                    solution.code.len() as i32,
+                    w.id
+                )
+                .execute(&pool)
+                .await
+                .map_err(|_| Error::ServerError)?;
+
+                StatusCode::CREATED
+            }
+            Some(_) => StatusCode::OK,
+        }
     } else {
-        Ok(AutoOutputFormat::new(
-            AllSolutionsOutput {
-                challenge,
-                leaderboard: LeaderboardEntry::get_leadeboard_for_challenge_and_language(
-                    &pool,
-                    challenge_id,
-                    &language_name,
-                )
-                .await,
-                tests: Some(test_result),
-            },
-            "challenge.html.jinja",
-            format,
-        )
-        .with_status(StatusCode::CREATED))
-    }
+        StatusCode::BAD_REQUEST
+    };
+    Ok(AutoOutputFormat::new(
+        AllSolutionsOutput {
+            challenge,
+            leaderboard: LeaderboardEntry::get_leadeboard_for_challenge_and_language(
+                &pool,
+                challenge_id,
+                &language_name,
+            )
+            .await,
+            tests: Some(test_result),
+            code: Some(solution.code),
+        },
+        "challenge.html.jinja",
+        format,
+    )
+    .with_status(status))
 }

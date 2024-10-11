@@ -36,7 +36,6 @@ fn create_github_client(
         .expect("Invalid token endpoint URL");
 
     // Set up the config for the Github OAuth2 process.
-    
 
     BasicClient::new(github_client_id)
         .set_client_secret(github_client_secret)
@@ -209,9 +208,6 @@ async fn insert_user(
             .await
             .unwrap();
 
-        session
-            .insert(ACCOUNT_ID_KEY, new_user_id.0)
-            .await
-            .unwrap();
+        session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
     }
 }

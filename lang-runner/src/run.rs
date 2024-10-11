@@ -139,11 +139,7 @@ async fn run_lang(
     command
         .arg(format!("/judge/{}", judge_lang.bin_location))
         .arg("/scripts/runner.js")
-        .args([
-            &format!("/lang/{}", lang.bin_location),
-            code as &str,
-            judge,
-        ]);
+        .args([&format!("/lang/{}", lang.bin_location), code as &str, judge]);
 
     let output = command.output().await?;
 

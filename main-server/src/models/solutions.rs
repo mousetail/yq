@@ -18,6 +18,38 @@ pub struct Solution {
     pub score: i32,
 }
 
+#[derive(Serialize)]
+pub struct Code {
+    pub code: String,
+    pub score: i32,
+    pub id: i32,
+}
+
+impl Code {
+    pub async fn get_best_code_for_user(
+        pool: &PgPool,
+        account: i32,
+        challenge: i32,
+        language: &str,
+    ) -> Option<Code> {
+        sqlx::query_as!(
+            Code,
+            r#"
+                SELECT code, score, id from solutions
+                WHERE author=$1 AND challenge=$2 AND language=$3
+                ORDER BY score ASC
+                LIMIT 1
+            "#,
+            account,
+            challenge,
+            language
+        )
+        .fetch_optional(pool)
+        .await
+        .expect("Database connection error")
+    }
+}
+
 #[derive(sqlx::FromRow, Deserialize, Serialize)]
 pub struct LeaderboardEntry {
     pub id: i32,
@@ -38,6 +70,7 @@ impl LeaderboardEntry {
             SELECT solutions.id as id, solutions.author as author_id, accounts.username as author_name, score FROM solutions
             LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2
+            ORDER BY solutions.score ASC
             ",
             challenge_id,
             language
