@@ -50,12 +50,11 @@ impl<S: Send + Sync> FromRequestParts<S> for Format {
             .unwrap()
             .as_str()
             .ends_with(".json")
+            || parts.headers.get("accept").is_some_and(|d| {
+                let bytes = d.as_bytes();
+                bytes.eq_ignore_ascii_case(b"application/json")
+            })
         {
-            return Ok(Format::Json);
-        } else if parts.headers.get("accept").is_some_and(|d| {
-            let bytes = d.as_bytes();
-            bytes.eq_ignore_ascii_case(b"application/json")
-        }) {
             return Ok(Format::Json);
         } else {
             return Ok(Format::Html(Box::new(

@@ -9,8 +9,7 @@ use crate::{
     models::{
         account::Account,
         challenge::Challenge,
-        solutions::{self, Code, LeaderboardEntry, NewSolution, Solution},
-        InsertedId,
+        solutions::{Code, LeaderboardEntry, NewSolution, Solution},
     },
     test_solution::test_solution,
 };
