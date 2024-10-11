@@ -1,6 +1,8 @@
 services:
   yq-runner:
-    build: ./lang-runner
+    build:
+      dockerfile: ../lang-runner/Dockerfile
+      context: ./target
     security_opt:
       - seccomp:unconfined
     cap_drop:

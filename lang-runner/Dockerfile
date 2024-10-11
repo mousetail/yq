@@ -28,4 +28,6 @@ ENV PATH="$PATH:/home/yq/.asdf/bin"
 # Add asdf shims to PATH, so installed executables can be run in this Dockerfile
 ENV PATH=$PATH:/home/yq/.asdf/shims
 
-ENTRYPOINT /debug/lang-runner
+COPY ./release/lang-runner /lang-runner
+
+ENTRYPOINT /lang-runner
