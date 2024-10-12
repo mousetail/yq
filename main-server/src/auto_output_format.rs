@@ -71,6 +71,21 @@ pub struct AutoOutputFormat<T: Serialize> {
     status: StatusCode,
 }
 
+fn render_html_error(title: &str, error: &tera::Error) -> Response<Body> {
+    let message = match &error.kind {
+        tera::ErrorKind::Msg(e) => e.clone(),
+        _ => format!("{:#?}", error.kind),
+    };
+    return Response::builder()
+        .status(StatusCode::INTERNAL_SERVER_ERROR)
+        .body(Body::from(format!(
+            "<h2>{}</h2>\n<pre>{}</pre>",
+            escape_html(title),
+            escape_html(&message)
+        )))
+        .unwrap();
+}
+
 impl<T: Serialize> AutoOutputFormat<T> {
     pub fn new(data: T, template: &'static str, format: Format) -> Self {
         AutoOutputFormat {
@@ -96,15 +111,7 @@ impl<T: Serialize> AutoOutputFormat<T> {
         let tera = match value.as_ref() {
             Ok(tera) => tera,
             Err(e) => {
-                return Response::builder()
-                    .status(500)
-                    .body(axum::body::Body::from(format!(
-                        "<h1>Error Initializing Template Engine</h1>
-                        <pre>{:?}</pre>
-                ",
-                        escape_html(&format!("{e:#?}"))
-                    )))
-                    .unwrap();
+                return render_html_error("Error initializing Tera", e);
             }
         };
 
@@ -112,7 +119,10 @@ impl<T: Serialize> AutoOutputFormat<T> {
         context.insert("object", &data);
         context.insert("account", &html_context.account);
 
-        let html = tera.render(template, &context).unwrap();
+        let html = match tera.render(template, &context) {
+            Ok(html) => html,
+            Err(err) => return render_html_error("Error rendering template", &err),
+        };
         Response::builder()
             .status(status)
             .body(axum::body::Body::from(html))

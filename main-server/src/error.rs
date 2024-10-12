@@ -5,6 +5,7 @@ use reqwest::StatusCode;
 pub enum Error {
     NotFound,
     ServerError,
+    DatabaseError,
     OauthError(OauthError),
 }
 
@@ -36,6 +37,10 @@ impl IntoResponse for Error {
             Error::ServerError => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Body::empty())
+                .unwrap(),
+            Error::DatabaseError => Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from("Database Error"))
                 .unwrap(),
             Error::OauthError(oauth_error) => oauth_error.into_response(),
         }

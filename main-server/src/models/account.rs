@@ -44,11 +44,12 @@ impl IntoResponse for AccountFetchError {
         match self {
             AccountFetchError::NotLoggedIn => Response::builder()
                 .status(StatusCode::UNAUTHORIZED)
-                .body(Body::from(""))
+                .body(Body::from("Not authorized"))
                 .unwrap(),
             e => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
-                .body(Body::from(println!("{e:?}")))
+                .header("Content-Type", "text/plain")
+                .body(Body::from(println!("{e:#?}")))
                 .unwrap(),
         }
     }

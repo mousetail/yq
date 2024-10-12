@@ -10,7 +10,7 @@ use axum::{routing::get, Extension, Router};
 use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
-    challenges::{all_challenges, new_challenge},
+    challenges::{all_challenges, compose_challenge, new_challenge},
     solution::{all_solutions, get_solution, new_solution},
 };
 use sqlx::postgres::PgPoolOptions;
@@ -49,11 +49,13 @@ async fn main() -> anyhow::Result<()> {
         .with_expiry(Expiry::OnInactivity(Duration::hours(10)));
 
     let app = Router::new()
-        .route("/", get(all_challenges).post(new_challenge))
-        .route("/:id/:language", get(all_solutions).post(new_solution))
-        .route("/:id/:language/:solution_id", get(get_solution))
+        .route("/", get(all_challenges))
+        .route("/challenge", get(compose_challenge).post(new_challenge))
+        .route("/challenge/:id", get(compose_challenge).post(new_challenge))
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))
+        .route("/:id/:language", get(all_solutions).post(new_solution))
+        .route("/:id/:language/:solution_id", get(get_solution))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
         .layer(session_layer);

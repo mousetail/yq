@@ -1,7 +1,6 @@
 use common::RunLangOutput;
 use serde::Serialize;
 
-use crate::models::{challenge::Challenge, solutions::NewSolution};
 
 #[derive(Serialize)]
 struct TestRunnerRequest<'a> {
@@ -12,10 +11,10 @@ struct TestRunnerRequest<'a> {
 }
 
 pub async fn test_solution(
-    solution: &NewSolution,
+    code: &str,
     language: &str,
     version: &str,
-    challenge: &Challenge,
+    judge: &str,
 ) -> reqwest::Result<RunLangOutput> {
     let client = reqwest::Client::new();
     let resp = client
@@ -23,8 +22,8 @@ pub async fn test_solution(
         .json(&TestRunnerRequest {
             lang: language,
             version,
-            code: &solution.code,
-            judge: &challenge.challenge.judge,
+            code,
+            judge,
         })
         .send()
         .await?

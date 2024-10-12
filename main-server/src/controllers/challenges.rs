@@ -1,14 +1,21 @@
-use axum::{http::StatusCode, Extension, Json};
+use axum::{
+    body::Body,
+    extract::Path,
+    http::{Response, StatusCode},
+    response::{IntoResponse, Redirect},
+    Extension,
+};
 use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
-    auto_output_format::{AutoOutputFormat, Format},
+    auto_output_format::{AutoInput, AutoOutputFormat, Format},
+    error::Error,
     models::{
         account::Account,
-        challenge::{Challenge, NewChallenge},
-        InsertedId,
+        challenge::{Challenge, NewChallenge, NewChallengeWithTests},
     },
+    test_solution::test_solution,
 };
 
 #[derive(Serialize)]
@@ -34,31 +41,90 @@ pub async fn all_challenges(
 }
 
 #[axum::debug_handler]
+pub async fn compose_challenge(
+    id: Option<Path<i32>>,
+    pool: Extension<PgPool>,
+    format: Format,
+) -> Result<AutoOutputFormat<NewChallenge>, Error> {
+    Ok(AutoOutputFormat::new(
+        match id {
+            Some(Path(id)) => match Challenge::get_by_id(&pool, id).await?.map(|d| d.challenge) {
+                Some(m) => m,
+                None => return Err(Error::NotFound),
+            },
+            None => NewChallenge::default(),
+        },
+        "submit_challenge.html.jinja",
+        format,
+    ))
+}
+
+#[axum::debug_handler]
 pub async fn new_challenge(
+    id: Option<Path<i32>>,
     Extension(pool): Extension<PgPool>,
     account: Account,
-    Json(challenge): Json<NewChallenge>,
-) -> Result<(StatusCode, Json<Challenge>), ()> {
-    // if task.task.is_empty() {
-    //     return Err(CustomError::BadRequest)
-    // }
-    let sql = "INSERT INTO challenges (name, judge, description, author) values ($1, $2, $3, $4) RETURNING id";
+    format: Format,
+    AutoInput(challenge): AutoInput<NewChallenge>,
+) -> Result<Response<Body>, Error> {
+    let tests = test_solution(
+        &challenge.example_code,
+        "nodejs",
+        "22.4.0",
+        &challenge.judge,
+    )
+    .await
+    .map_err(|_| Error::ServerError)?;
 
-    let InsertedId(row) = sqlx::query_as(sql)
-        .bind(&challenge.name)
-        .bind(&challenge.judge)
-        .bind(&challenge.description)
-        .bind(account.id)
-        .fetch_one(&pool)
-        .await
-        .map_err(|_| ())?;
+    if !tests.tests.pass {
+        return Ok(AutoOutputFormat::new(
+            NewChallengeWithTests {
+                challenge,
+                tests: Some(tests),
+            },
+            "submit_challenge.html.jinja",
+            format,
+        )
+        .with_status(StatusCode::BAD_REQUEST)
+        .into_response());
+    }
 
-    Ok((
-        StatusCode::CREATED,
-        Json(Challenge {
-            challenge,
-            id: row,
-            author: account.id,
-        }),
-    ))
+    match id {
+        None => {
+            let row = sqlx::query_scalar!(r"INSERT INTO challenges (name, judge, description, author) values ($1, $2, $3, $4) RETURNING id",
+                challenge.name,
+                challenge.judge,
+                challenge.description,
+                account.id
+            )
+                .fetch_one(&pool)
+                .await
+                .map_err(|_| Error::DatabaseError)?;
+
+            return Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response());
+        }
+        Some(Path(id)) => {
+            sqlx::query!(
+                r"UPDATE challenges SET name=$1, judge=$2, description=$3, example_code=$4 WHERE id=$5",
+                challenge.name,
+                challenge.judge,
+                challenge.description,
+                challenge.example_code,
+                id
+            )
+            .execute(&pool)
+            .await
+            .unwrap();
+
+            return Ok(AutoOutputFormat::new(
+                NewChallengeWithTests {
+                    challenge,
+                    tests: Some(tests),
+                },
+                "submit_challenge.html.jinja",
+                format,
+            )
+            .into_response());
+        }
+    }
 }

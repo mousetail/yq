@@ -35,7 +35,9 @@ pub async fn all_solutions(
     )
     .await;
 
-    let challenge = Challenge::get_by_id(&pool, challenge_id).await?;
+    let challenge = Challenge::get_by_id(&pool, challenge_id)
+        .await?
+        .ok_or(Error::NotFound)?;
     let code = match account {
         Some(account) => {
             Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await
@@ -80,7 +82,10 @@ pub async fn new_solution(
     format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
-    let challenge = Challenge::get_by_id(&pool, challenge_id).await.unwrap();
+    let challenge = Challenge::get_by_id(&pool, challenge_id)
+        .await?
+        .ok_or(Error::NotFound)
+        .unwrap();
 
     let version = LANGS
         .iter()
@@ -88,9 +93,14 @@ pub async fn new_solution(
         .ok_or(Error::NotFound)?
         .latest_version;
 
-    let test_result = test_solution(&solution, &language_name, version, &challenge)
-        .await
-        .unwrap();
+    let test_result = test_solution(
+        &solution.code,
+        &language_name,
+        version,
+        &challenge.challenge.judge,
+    )
+    .await
+    .unwrap();
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 

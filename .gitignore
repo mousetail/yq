@@ -1,3 +1,4 @@
 /target
 postgres-data
 .env.local
+.vscode
