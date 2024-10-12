@@ -10,7 +10,7 @@
   <pre>{{ cases.stderr }}</pre>
 
   {% for test in cases.tests.test_cases %}
-    <div class="test-case">
+    <div class="test-case test-{{- test.pass | lower }}">
       {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}
 
       {% if test.pass == "Pass" %}

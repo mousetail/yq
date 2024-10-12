@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
 
-    {% block head %}
-    {% endblock %}
+    {% block head %}{% endblock %}
 
     <style>
         * {
@@ -39,21 +38,52 @@
             width: 100%;
             font-family: monospace;
         }
+
+        .test-case {
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+
+        .test-case pre {
+            background-color: white;
+            padding: 1rem;
+        }
+
+        .test-pass {
+            background-color: #7dca8c;
+        }
+
+        .test-fail {
+            background-color: #ff4444;
+        }
+
+        .test-warning {
+            background-color: yellow;
+        }
+
+        .test-info {
+            background-color: #ddd;
+        }
+
+        .diff {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        {% if account %}
-            {{ account.username}}
-            <img src="{{account.avatar}}">
-        {% else %}
-            <a href="/login/github">Login</a>
-        {% endif %}
+      {% if account %}
+        {{ account.username }}
+        <img src="{{ account.avatar }}" alt="{{ account.username }} profile picture" />
+      {% else %}
+        <a href="/login/github">Login</a>
+      {% endif %}
     </div>
 
     <div class="content">
-        {% block content %}
-        {% endblock%}
+      {% block content %}{% endblock %}
     </div>
-</body>
+  </body>
 </html>
