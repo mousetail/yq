@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
 
-    {% block head %}{% endblock %}
+    {% block head %}
+      <title>YQ</title>
+      <meta name="description" value="Yet Another Golf Site" />
+      <meta name="keywords" value="code-golf" />
+    {% endblock head %}
 
     <style>
         * {
@@ -13,6 +17,11 @@
 
         body {
             font-family: sans-serif;
+        }
+
+        ul,
+        ol {
+            margin-bottom: 1rem;
         }
 
         .header {
@@ -83,7 +92,8 @@
     </div>
 
     <div class="content">
-      {% block content %}{% endblock %}
+      {% block content %}
+      {% endblock content %}
     </div>
   </body>
 </html>
