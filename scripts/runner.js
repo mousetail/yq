@@ -1,6 +1,7 @@
 const { argv } = require('node:process');
 const { writeFile } = require('node:fs/promises');
 const { execFile } = require('node:child_process');
+const { default: test } = require('node:test');
 
 const [, , execute, code, judge] = argv;
 
@@ -17,6 +18,13 @@ class FinalVerdict {
     constructor(pass) {
         this.pass = pass;
     }
+}
+
+const eqIgnoreTrailingWhitespace = (a, b) => {
+    const [a_stripped, b_stripped] = [a, b].map(
+        (text) => text.replace(/\s*(?=\n|$)/ug, '')
+    )
+    return a_stripped == b_stripped
 }
 
 const run_program = (file, args, env, input) => {

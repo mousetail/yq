@@ -6,8 +6,10 @@
     Fail
   {% endif %}
 
-  <h3>Error</h3>
-  <pre>{{ cases.stderr }}</pre>
+  {% if cases.stderr %}
+    <h3>Judge Errors</h3>
+    <pre>{{ cases.stderr }}</pre>
+  {% endif %}
 
   {% for test in cases.tests.test_cases %}
     <div class="test-case test-{{- test.pass | lower }}">
