@@ -1,6 +1,7 @@
 mod auto_output_format;
 mod controllers;
 mod error;
+mod file_session_storage;
 mod models;
 mod session;
 mod test_solution;
@@ -13,6 +14,7 @@ use controllers::{
     challenges::{all_challenges, compose_challenge, new_challenge},
     solution::{all_solutions, get_solution, new_solution},
 };
+use file_session_storage::FileSessionStorage;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
@@ -41,7 +43,7 @@ async fn main() -> anyhow::Result<()> {
         .context("could not connect to database_url")?;
 
     // Setup Sessions
-    let session_store = MemoryStore::default();
+    let session_store = FileSessionStorage;
     let session_layer = SessionManagerLayer::new(session_store)
         .with_secure(false)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)

@@ -2,3 +2,4 @@
 postgres-data
 .env.local
 .vscode
+.sessions
