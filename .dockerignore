@@ -1,4 +1,4 @@
-postgres-data
+postgres-data/.
 .git
 .vscode
 .sessions

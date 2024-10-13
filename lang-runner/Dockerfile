@@ -1,3 +1,11 @@
+FROM rust:1.81-bullseye AS rust-build
+
+WORKDIR /usr/src/myapp
+COPY . .
+
+RUN ls
+RUN cargo build --package lang-runner --release
+
 FROM debian:12
 
 # Install asdf dependencies
@@ -28,6 +36,7 @@ ENV PATH="$PATH:/home/yq/.asdf/bin"
 # Add asdf shims to PATH, so installed executables can be run in this Dockerfile
 ENV PATH=$PATH:/home/yq/.asdf/shims
 
-COPY ./release/lang-runner /lang-runner
+COPY --from=rust-build /usr/src/myapp/target/release/lang-runner /lang-runner
+COPY ./scripts /scripts
 
 ENTRYPOINT /lang-runner
