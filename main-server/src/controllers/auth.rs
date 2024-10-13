@@ -42,8 +42,11 @@ fn create_github_client(
         .set_auth_uri(auth_url)
         .set_token_uri(token_url)
         .set_redirect_uri(
-            RedirectUrl::new("http://localhost:3001/callback/github".to_string())
-                .expect("Invalid redirect URL"),
+            RedirectUrl::new(format!(
+                "{}/callback/github",
+                env::var("YQ_PUBLIC_URL").expect("Missing the YQ_PUBLIC_URL environment variable")
+            ))
+            .expect("Invalid redirect URL"),
         )
 }
 

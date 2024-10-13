@@ -18,7 +18,7 @@ use file_session_storage::FileSessionStorage;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
-use tower_sessions::{cookie::time::Duration, Expiry, MemoryStore, SessionManagerLayer};
+use tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
