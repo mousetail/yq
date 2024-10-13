@@ -106,7 +106,12 @@ impl<T: Serialize> AutoOutputFormat<T> {
         status: StatusCode,
         html_context: &HtmlContext,
     ) -> axum::response::Response {
-        let value = TERA.get_or_init(|| Tera::new("templates/**/*.jinja"));
+        let value = TERA.get_or_init(|| {
+            Tera::new("templates/**/*.jinja").map(|mut k| {
+                k.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
+                return k;
+            })
+        });
 
         let tera = match value.as_ref() {
             Ok(tera) => tera,
