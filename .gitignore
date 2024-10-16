@@ -3,3 +3,5 @@ postgres-data
 .env.local
 .vscode
 .sessions
+node_modules
+static/target

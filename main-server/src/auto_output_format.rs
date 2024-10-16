@@ -94,6 +94,34 @@ fn get_langs(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
     to_value(LANGS).map_err(tera::Error::json)
 }
 
+fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
+    let scripts = values
+        .get("modules")
+        .ok_or_else(|| tera::Error::msg("Expected argument \"modules\'"))?;
+    let modules = match scripts {
+        Value::Array(arr) => arr
+            .iter()
+            .map(|k| k.as_str())
+            .collect::<Option<Vec<&str>>>()
+            .ok_or_else(|| tera::Error::msg("Expected modules to be an array of strings"))?,
+        Value::String(k) => vec![k.as_str()],
+        _ => return Err(tera::Error::msg("Expected scripts to be a string or array")),
+    };
+
+    // Dev Only Version
+    // TODO: Production Version
+    let mut out: String =
+        r#"<script type="module" src="http://localhost:5173/@vite/client"></script>"#.to_string();
+    for module in modules {
+        out.push_str(&format!(
+            r#"<script type="module" src="http://localhost:5173/{}"></script>"#,
+            escape_html(module)
+        ));
+    }
+
+    Ok(Value::String(out))
+}
+
 impl<T: Serialize> AutoOutputFormat<T> {
     pub fn new(data: T, template: &'static str, format: Format) -> Self {
         AutoOutputFormat {
@@ -118,6 +146,7 @@ impl<T: Serialize> AutoOutputFormat<T> {
             Tera::new("templates/**/*.jinja").map(|mut tera| {
                 tera.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
                 tera.register_function("languages", get_langs);
+                tera.register_function("modules", load_assets);
                 tera
             })
         });

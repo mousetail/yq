@@ -2,3 +2,4 @@ postgres-data/.
 .git
 .vscode
 .sessions
+node_modules

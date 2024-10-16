@@ -18,6 +18,7 @@ use file_session_storage::FileSessionStorage;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
+use tower_http::services::ServeDir;
 use tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
 
 #[tokio::main]
@@ -58,6 +59,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/callback/github", get(github_callback))
         .route("/:id/:language", get(all_solutions).post(new_solution))
         .route("/:id/:language/:solution_id", get(get_solution))
+        .nest_service("/static", ServeDir::new("/static"))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
         .layer(session_layer);

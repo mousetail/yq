@@ -8,6 +8,10 @@
       <meta name="keywords" value="code-golf" />
     {% endblock head %}
 
+    {% block scripts %}
+      {{ modules(modules="js/index.ts") | safe }}
+    {% endblock scripts %}
+
     <style>
         * {
             box-sizing: border-box;
