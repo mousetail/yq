@@ -13,7 +13,8 @@ use axum::{
 };
 use common::langs::LANGS;
 use reqwest::StatusCode;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::fs::OpenOptions;
 use tera::{escape_html, to_value, Context, Tera, Value};
 
 use crate::models::account::Account;
@@ -94,6 +95,52 @@ fn get_langs(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
     to_value(LANGS).map_err(tera::Error::json)
 }
 
+#[cfg(not(debug_assertions))]
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ManifestEntry {
+    file: String,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    is_entry: bool,
+    #[serde(default)]
+    css: Vec<String>,
+    #[serde(default)]
+    imports: Vec<String>,
+    #[serde(default)]
+    dynamic_imports: Vec<String>,
+}
+
+#[cfg(not(debug_assertions))]
+impl ManifestEntry {
+    fn find_all_imports(mut files: Vec<&str>) -> Vec<String> {
+        let manifest = VITE_MANIFEST.get_or_init(|| {
+            let file = OpenOptions::new()
+                .read(true)
+                .open("static/target/.vite/manifest.json")
+                .unwrap();
+
+            serde_json::from_reader(file).unwrap()
+        });
+
+        let mut output = vec![];
+        while let Some(file) = files.pop() {
+            let value = manifest.get(file).unwrap();
+            output.push(value.file.clone());
+
+            for import in &value.imports {
+                files.push(import);
+            }
+        }
+
+        output
+    }
+}
+
+#[cfg(not(debug_assertions))]
+static VITE_MANIFEST: OnceLock<HashMap<String, ManifestEntry>> = OnceLock::new();
+
 fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
     let scripts = values
         .get("modules")
@@ -108,18 +155,35 @@ fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
         _ => return Err(tera::Error::msg("Expected scripts to be a string or array")),
     };
 
-    // Dev Only Version
-    // TODO: Production Version
-    let mut out: String =
-        r#"<script type="module" src="http://localhost:5173/@vite/client"></script>"#.to_string();
-    for module in modules {
-        out.push_str(&format!(
-            r#"<script type="module" src="http://localhost:5173/{}"></script>"#,
-            escape_html(module)
+    #[cfg(debug_assertions)]
+    {
+        let mut out: String =
+            r#"<script type="module" src="http://localhost:5173/@vite/client"></script>"#
+                .to_string();
+        for module in modules {
+            out.push_str(&format!(
+                r#"<script type="module" src="http://localhost:5173/{}"></script>"#,
+                escape_html(module)
+            ));
+        }
+
+        Ok(Value::String(out))
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        let scripts = ManifestEntry::find_all_imports(modules);
+        return Ok(Value::String(
+            scripts
+                .into_iter()
+                .map(|script| {
+                    format!(
+                        r#"<script type="module" src="/static/target/{}"></script>"#,
+                        escape_html(&script)
+                    )
+                })
+                .collect(),
         ));
     }
-
-    Ok(Value::String(out))
 }
 
 impl<T: Serialize> AutoOutputFormat<T> {
