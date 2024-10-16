@@ -101,7 +101,7 @@ pub async fn new_challenge(
                 .await
                 .map_err(|_| Error::DatabaseError)?;
 
-            return Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response());
+            Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response())
         }
         Some(Path(id)) => {
             sqlx::query!(
@@ -116,7 +116,7 @@ pub async fn new_challenge(
             .await
             .unwrap();
 
-            return Ok(AutoOutputFormat::new(
+            Ok(AutoOutputFormat::new(
                 NewChallengeWithTests {
                     challenge,
                     tests: Some(tests),
@@ -124,7 +124,7 @@ pub async fn new_challenge(
                 "submit_challenge.html.jinja",
                 format,
             )
-            .into_response());
+            .into_response())
         }
     }
 }

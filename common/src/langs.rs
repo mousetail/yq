@@ -1,3 +1,6 @@
+use serde::Serialize;
+
+#[derive(Serialize)]
 pub struct Lang {
     pub name: &'static str,
     pub bin_location: &'static str,

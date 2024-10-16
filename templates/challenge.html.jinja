@@ -21,6 +21,12 @@
     </table>
   </div>
 
+  <div class="lang-list">
+    {% for lang in languages() %}
+      <a href="/{{ object.challenge.id }}/{{ lang.name }}">{{ lang.name }}</a>
+    {% endfor %}
+  </div>
+
   <div>{{ object.challenge.challenge.description }}</div>
 
   <form method="post">

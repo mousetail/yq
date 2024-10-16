@@ -1,4 +1,4 @@
-use std::{convert::Infallible, sync::OnceLock};
+use std::{collections::HashMap, convert::Infallible, error::Error, sync::OnceLock};
 
 use axum::{
     async_trait,
@@ -11,9 +11,10 @@ use axum::{
     response::IntoResponse,
     Form, Json,
 };
+use common::langs::LANGS;
 use reqwest::StatusCode;
 use serde::{de::DeserializeOwned, Serialize};
-use tera::{escape_html, Context, Tera};
+use tera::{escape_html, to_value, Context, Tera, Value};
 
 use crate::models::account::Account;
 
@@ -73,17 +74,24 @@ pub struct AutoOutputFormat<T: Serialize> {
 
 fn render_html_error(title: &str, error: &tera::Error) -> Response<Body> {
     let message = match &error.kind {
-        tera::ErrorKind::Msg(e) => e.clone(),
+        tera::ErrorKind::Msg(e) => format!("{e}\n{:?}", error.source()),
         _ => format!("{:#?}", error.kind),
     };
-    return Response::builder()
+    Response::builder()
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(Body::from(format!(
             "<h2>{}</h2>\n<pre>{}</pre>",
             escape_html(title),
             escape_html(&message)
         )))
-        .unwrap();
+        .unwrap()
+}
+
+fn get_langs(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
+    if !values.is_empty() {
+        return Err(tera::Error::msg("Get langs function takes no arguments"));
+    }
+    to_value(LANGS).map_err(tera::Error::json)
 }
 
 impl<T: Serialize> AutoOutputFormat<T> {
@@ -107,9 +115,10 @@ impl<T: Serialize> AutoOutputFormat<T> {
         html_context: &HtmlContext,
     ) -> axum::response::Response {
         let value = TERA.get_or_init(|| {
-            Tera::new("templates/**/*.jinja").map(|mut k| {
-                k.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
-                return k;
+            Tera::new("templates/**/*.jinja").map(|mut tera| {
+                tera.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
+                tera.register_function("languages", get_langs);
+                tera
             })
         });
 
