@@ -47,7 +47,7 @@
   </div>
 
   <form method="post">
-    <textarea name="code">
+    <textarea name="code" class="codemirror">
         {%- if object.code -%}
           {{- object.code -}}
         {%- endif -%}
@@ -56,5 +56,7 @@
     <button type="submit">Submit!</button>
   </form>
 
-  {% if object.tests %}{{ test_cases::test_cases(cases=object.tests) }}{% endif %}
+  {% if object.tests %}
+    {{ test_cases::test_cases(cases=object.tests) }}
+  {% endif %}
 {% endblock content %}

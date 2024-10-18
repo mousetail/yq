@@ -1,4 +1,4 @@
-import { EditorView, minimalSetup } from 'codemirror';
+import { basicSetup, EditorView, minimalSetup } from 'codemirror';
 
 function editorFromTextArea(textarea: HTMLTextAreaElement, extensions: typeof minimalSetup) {
     let view = new EditorView({ doc: textarea.value, extensions })
@@ -12,10 +12,11 @@ function editorFromTextArea(textarea: HTMLTextAreaElement, extensions: typeof mi
     return view
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('load', () => {
     for (const textarea of document.querySelectorAll<HTMLTextAreaElement>('textarea.codemirror')) {
-        editorFromTextArea(textarea, minimalSetup);
+        console.log("Replacing textarea with codemirror");
+        editorFromTextArea(textarea, basicSetup);
     }
-})
+});
 
 
