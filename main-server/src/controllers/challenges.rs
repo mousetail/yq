@@ -13,7 +13,7 @@ use crate::{
     error::Error,
     models::{
         account::Account,
-        challenge::{Challenge, NewChallenge, NewChallengeWithTests},
+        challenge::{Challenge, ChallengeWithAuthorInfo, NewChallenge, NewChallengeWithTests},
     },
     test_solution::test_solution,
 };
@@ -27,7 +27,7 @@ pub async fn all_challenges(
     Extension(pool): Extension<PgPool>,
     format: Format,
 ) -> AutoOutputFormat<AllChallengesOutput> {
-    let sql = "SELECT * FROM challenges";
+    let sql = "SELECT * FROM challenges ORDER BY name DESC";
     let challenges = sqlx::query_as::<_, Challenge>(sql)
         .fetch_all(&pool)
         .await
@@ -48,8 +48,11 @@ pub async fn compose_challenge(
 ) -> Result<AutoOutputFormat<NewChallenge>, Error> {
     Ok(AutoOutputFormat::new(
         match id {
-            Some(Path(id)) => match Challenge::get_by_id(&pool, id).await?.map(|d| d.challenge) {
-                Some(m) => m,
+            Some(Path(id)) => match ChallengeWithAuthorInfo::get_by_id(&pool, id)
+                .await?
+                .map(|d| d.challenge)
+            {
+                Some(m) => m.challenge,
                 None => return Err(Error::NotFound),
             },
             None => NewChallenge::default(),
@@ -59,7 +62,6 @@ pub async fn compose_challenge(
     ))
 }
 
-#[axum::debug_handler]
 pub async fn new_challenge(
     id: Option<Path<i32>>,
     Extension(pool): Extension<PgPool>,
@@ -99,7 +101,7 @@ pub async fn new_challenge(
             )
                 .fetch_one(&pool)
                 .await
-                .map_err(|_| Error::DatabaseError)?;
+                .map_err(|e| Error::DatabaseError(e))?;
 
             Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response())
         }

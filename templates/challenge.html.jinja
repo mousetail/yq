@@ -3,31 +3,48 @@
 
 {% block content %}
   <h1>{{ object.challenge.challenge.name }}</h1>
-  <a href="/challenge/{{ object.challenge.id }}">Edit</a>
-  <div class="leaderboard">
-    <table>
-      <tr>
-        <th>Author</th>
-        <th>Id</th>
-        <th>Score</th>
-      </tr>
-      {% for solution in object.leaderboard %}
+  <p>
+    A challenge by
+    <img src="{{ object.challenge.author_avatar }}&size=18" alt="{{ object.challenge.author_name }} avatar" />
+    {{ object.challenge.author_name }}
+    <a href="/challenge/{{ object.challenge.id }}">Edit</a>
+  </p>
+  <div class="two-column-descripion">
+    <div>
+      <h3>Descripion</h3>
+      {{ object.challenge.challenge.description }}
+    </div>
+    <div class="leaderboard">
+      <h3>Leaderboard</h3>
+
+      <table>
         <tr>
-          <td>{{ solution.author_name }}</td>
-          <td>{{ solution.id }}</td>
-          <td>{{ solution.score }}</td>
+          <th></th>
+          <th>Author</th>
+          <th>Score</th>
         </tr>
-      {% endfor %}
-    </table>
+        {% for solution in object.leaderboard %}
+          <tr>
+            <td>
+              <img src="{{ solution.author_avatar }}&size=18" alt="{{ solution.author_name }} avatar" />
+            </td>
+            <td>{{ solution.author_name }}</td>
+            <td>{{ solution.score }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="3">No solutions yet</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
   </div>
 
   <div class="lang-list">
     {% for lang in languages() %}
-      <a href="/{{ object.challenge.id }}/{{ lang.name }}">{{ lang.name }}</a>
+      <a href="/{{ object.challenge.id }}/{{ lang.name }}" class="lang">{{ lang.name }}</a>
     {% endfor %}
   </div>
-
-  <div>{{ object.challenge.challenge.description }}</div>
 
   <form method="post">
     <textarea name="code">
@@ -39,7 +56,5 @@
     <button type="submit">Submit!</button>
   </form>
 
-  {% if object.tests %}
-    {{ test_cases::test_cases(cases=object.tests) }}
-  {% endif %}
+  {% if object.tests %}{{ test_cases::test_cases(cases=object.tests) }}{% endif %}
 {% endblock content %}

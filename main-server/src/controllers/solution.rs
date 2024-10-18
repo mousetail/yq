@@ -8,7 +8,7 @@ use crate::{
     error::Error,
     models::{
         account::Account,
-        challenge::Challenge,
+        challenge::{Challenge, ChallengeWithAuthorInfo},
         solutions::{Code, LeaderboardEntry, NewSolution, Solution},
     },
     test_solution::test_solution,
@@ -16,7 +16,7 @@ use crate::{
 
 #[derive(Serialize)]
 pub struct AllSolutionsOutput {
-    challenge: Challenge,
+    challenge: ChallengeWithAuthorInfo,
     leaderboard: Vec<LeaderboardEntry>,
     tests: Option<RunLangOutput>,
     code: Option<String>,
@@ -35,7 +35,7 @@ pub async fn all_solutions(
     )
     .await;
 
-    let challenge = Challenge::get_by_id(&pool, challenge_id)
+    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
         .await?
         .ok_or(Error::NotFound)?;
     let code = match account {
@@ -74,7 +74,6 @@ pub async fn get_solution(
     Ok(Json(solution))
 }
 
-#[axum::debug_handler]
 pub async fn new_solution(
     Path((challenge_id, language_name)): Path<(i32, String)>,
     account: Account,
@@ -82,7 +81,7 @@ pub async fn new_solution(
     format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
-    let challenge = Challenge::get_by_id(&pool, challenge_id)
+    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
         .await?
         .ok_or(Error::NotFound)
         .unwrap();
@@ -97,7 +96,7 @@ pub async fn new_solution(
         &solution.code,
         &language_name,
         version,
-        &challenge.challenge.judge,
+        &challenge.challenge.challenge.judge,
     )
     .await
     .unwrap();

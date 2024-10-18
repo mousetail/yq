@@ -27,15 +27,36 @@ pub struct Challenge {
     pub author: i32,
 }
 
-impl Challenge {
-    pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Challenge>, Error> {
-        let sql = "SELECT * FROM challenges WHERE id=$1".to_string();
+#[derive(sqlx::FromRow, Deserialize, Serialize)]
+pub struct ChallengeWithAuthorInfo {
+    #[sqlx(flatten)]
+    #[serde(flatten)]
+    pub challenge: Challenge,
+    pub author_name: String,
+    pub author_avatar: String,
+}
 
-        let challenge: Option<Challenge> = sqlx::query_as(&sql)
+impl ChallengeWithAuthorInfo {
+    pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, Error> {
+        let sql = "SELECT
+            challenges.id,
+            challenges.name,
+            challenges.description,
+            challenges.judge,
+            challenges.example_code,
+            challenges.author,
+            accounts.username as author_name,
+            accounts.avatar as author_avatar
+            FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id
+            WHERE challenges.id=$1
+            "
+        .to_string();
+
+        let challenge: Option<ChallengeWithAuthorInfo> = sqlx::query_as(&sql)
             .bind(id)
             .fetch_optional(pool)
             .await
-            .map_err(|_| Error::DatabaseError)?;
+            .map_err(|e| Error::DatabaseError(e))?;
 
         Ok(challenge)
     }

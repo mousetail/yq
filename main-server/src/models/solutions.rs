@@ -55,6 +55,7 @@ pub struct LeaderboardEntry {
     pub id: i32,
     pub author_id: i32,
     pub author_name: String,
+    pub author_avatar: String,
     pub score: i32,
 }
 
@@ -67,7 +68,12 @@ impl LeaderboardEntry {
         sqlx::query_as!(
             LeaderboardEntry,
             "
-            SELECT solutions.id as id, solutions.author as author_id, accounts.username as author_name, score FROM solutions
+            SELECT
+                solutions.id as id,
+                solutions.author as author_id,
+                accounts.username as author_name,
+                accounts.avatar as author_avatar,
+                score FROM solutions
             LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2
             ORDER BY solutions.score ASC

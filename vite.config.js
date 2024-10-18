@@ -9,6 +9,5 @@ export default defineConfig({
             input: 'js/index.ts',
         },
         outDir: 'static/target',
-    },
-    base: '/static/target'
+    }
 });
