@@ -113,6 +113,10 @@ textarea:focus-within {
     width: 1rem;
 }
 
+.leaderboard table img {
+    width: 18px;
+}
+
 .leaderboard table th:last-child {
     width: 4rem;
 }
