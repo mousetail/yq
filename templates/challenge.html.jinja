@@ -5,7 +5,7 @@
   <h1>{{ object.challenge.challenge.name }}</h1>
   <p>
     A challenge by
-    <img src="{{ object.challenge.author_avatar }}&size=18" alt="{{ object.challenge.author_name }} avatar" />
+    <img src="{{ object.challenge.author_avatar }}&size=18" alt="{{ object.challenge.author_name }} avatar" height="18" />
     {{ object.challenge.author_name }}
     <a href="/challenge/{{ object.challenge.id }}">Edit</a>
   </p>
@@ -26,7 +26,7 @@
         {% for solution in object.leaderboard %}
           <tr>
             <td>
-              <img src="{{ solution.author_avatar }}&size=18" alt="{{ solution.author_name }} avatar" />
+              <img src="{{ solution.author_avatar }}&size=18" alt="{{ solution.author_name }} avatar" height="18" />
             </td>
             <td>{{ solution.author_name }}</td>
             <td>{{ solution.score }}</td>
