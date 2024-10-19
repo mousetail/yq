@@ -18,7 +18,7 @@ use file_session_storage::FileSessionStorage;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
-use tower_http::services::{ServeDir, ServeFile};
+use tower_http::services::ServeDir;
 use tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
 
 #[tokio::main]

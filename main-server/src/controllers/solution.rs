@@ -8,7 +8,7 @@ use crate::{
     error::Error,
     models::{
         account::Account,
-        challenge::{Challenge, ChallengeWithAuthorInfo},
+        challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, NewSolution, Solution},
     },
     test_solution::test_solution,

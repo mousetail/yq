@@ -13,8 +13,7 @@ use axum::{
 };
 use common::langs::LANGS;
 use reqwest::StatusCode;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::fs::OpenOptions;
+use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, to_value, Context, Tera, Value};
 
 use crate::models::account::Account;
