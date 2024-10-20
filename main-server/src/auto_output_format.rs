@@ -13,6 +13,8 @@ use axum::{
 };
 use common::langs::LANGS;
 use reqwest::StatusCode;
+#[cfg(not(debug_assertions))]
+use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, to_value, Context, Tera, Value};
 
@@ -114,6 +116,8 @@ struct ManifestEntry {
 #[cfg(not(debug_assertions))]
 impl ManifestEntry {
     fn find_all_imports(mut files: Vec<&str>) -> Vec<String> {
+        use std::fs::OpenOptions;
+
         let manifest = VITE_MANIFEST.get_or_init(|| {
             let file = OpenOptions::new()
                 .read(true)
