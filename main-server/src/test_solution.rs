@@ -1,6 +1,7 @@
 use common::RunLangOutput;
 use serde::Serialize;
 
+use crate::error::Error;
 
 #[derive(Serialize)]
 struct TestRunnerRequest<'a> {
@@ -15,7 +16,7 @@ pub async fn test_solution(
     language: &str,
     version: &str,
     judge: &str,
-) -> reqwest::Result<RunLangOutput> {
+) -> Result<RunLangOutput, Error> {
     let client = reqwest::Client::new();
     let resp = client
         .post("http://localhost:3000")
@@ -26,10 +27,19 @@ pub async fn test_solution(
             judge,
         })
         .send()
-        .await?
-        .error_for_status()?
-        .json::<RunLangOutput>()
-        .await?;
+        .await
+        .map_err(|_e| Error::RunLangError("Failed to connect to the lang runner".to_string()))?;
 
-    Ok(resp)
+    if !resp.status().is_success() {
+        return Err(Error::RunLangError(
+            resp.text().await.map_err(|_| Error::ServerError)?,
+        ));
+    }
+
+    let out = resp
+        .json::<RunLangOutput>()
+        .await
+        .map_err(|_| Error::RunLangError("Failed to parse json".to_string()))?;
+
+    Ok(out)
 }

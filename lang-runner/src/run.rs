@@ -5,6 +5,7 @@ use common::{
     langs::{Lang, LANGS},
     JudgeResult, RunLangOutput, TestCase,
 };
+use futures_util::AsyncWriteExt;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -14,6 +15,7 @@ use crate::{
 };
 
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
+    println!("Installing language version {}", lang.name);
     let plugin_install_output = Command::new("asdf")
         .args(["plugin", "add", lang.name, lang.plugin])
         .stderr(Stdio::inherit())
@@ -28,14 +30,15 @@ async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessE
 }
 
 async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunProcessError> {
-    let output = Command::new("asdf")
+    println!("Installing language version {} {}", lang.name, version);
+    let status = Command::new("asdf")
         .args(["install", lang.name, version])
         .stderr(Stdio::inherit())
-        .output()
+        .status()
         .await?;
 
-    if !output.status.success() {
-        return Err(RunProcessError::NonZeroStatusCode(output.status.code()));
+    if !status.success() {
+        return Err(RunProcessError::NonZeroStatusCode(status.code()));
     }
     Ok(())
 }
@@ -99,6 +102,7 @@ async fn run_lang(
     //     .open(&path)?;
     // tmp_file.write_all(code.as_bytes())?;
     // tmp_file.flush()?;
+    println!("Running code in lang");
 
     let mut command = Command::new("bwrap");
     command
@@ -120,6 +124,9 @@ async fn run_lang(
             "--ro-bind",
             "/lib",
             "/lib",
+            "--ro-bind",
+            "/etc/alternatives",
+            "/etc/alternatives",
             "--tmpfs",
             "/tmp",
         ])
@@ -137,11 +144,37 @@ async fn run_lang(
     }
 
     command
-        .arg(format!("/judge/{}", judge_lang.bin_location))
-        .arg("/scripts/runner.js")
-        .args([&format!("/lang/{}", lang.bin_location), code as &str, judge]);
+        .args(
+            judge_lang
+                .run_command
+                .iter()
+                .map(|k| {
+                    k.replace("${LANG_LOCATION}", "/judge")
+                        .replace("${FILE_LOCATION}", "/scripts/runner.js")
+                })
+                .collect::<Vec<_>>(),
+        )
+        .stdout(Stdio::piped())
+        .stdin(Stdio::piped());
+    // .args([&format!("/lang/{}", lang.bin_location), code as &str, judge]);
 
-    let output = command.output().await?;
+    let mut child = command.spawn()?;
+    let Some(stdin) = &mut child.stdin else {
+        panic!("Child stdin should exist");
+    };
+
+    #[derive(Serialize)]
+    struct RunnerInput<'a> {
+        lang: &'a Lang,
+        code: &'a str,
+        judge: &'a str,
+    }
+
+    let data = serde_json::to_string(&RunnerInput { lang, code, judge })
+        .map_err(|e| RunProcessError::SerializationFailed(e))?;
+    stdin.write_all(data.as_bytes()).await?;
+
+    let output = child.output().await?;
 
     let mut stdout = output.stdout;
     stdout.truncate(10000);

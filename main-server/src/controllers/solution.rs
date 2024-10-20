@@ -98,8 +98,7 @@ pub async fn new_solution(
         version,
         &challenge.challenge.challenge.judge,
     )
-    .await
-    .unwrap();
+    .await?;
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 

@@ -2,7 +2,7 @@ use axum::{body::Body, http::Response, response::IntoResponse};
 use serde::{Serialize, Serializer};
 
 fn serialize_error<S: Serializer>(
-    error: &std::io::Error,
+    error: &impl ToString,
     serializer: S,
 ) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> {
     serializer.serialize_str(&error.to_string())
@@ -11,6 +11,7 @@ fn serialize_error<S: Serializer>(
 #[derive(Debug, Serialize)]
 pub enum RunProcessError {
     NonZeroStatusCode(#[allow(unused)] Option<i32>),
+    SerializationFailed(#[serde(serialize_with = "serialize_error")] serde_json::Error),
     IOError(
         #[allow(unused)]
         #[serde(serialize_with = "serialize_error")]

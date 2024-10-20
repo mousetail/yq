@@ -7,6 +7,7 @@ pub enum Error {
     ServerError,
     DatabaseError(sqlx::Error),
     OauthError(OauthError),
+    RunLangError(String),
 }
 
 #[derive(Debug)]
@@ -46,6 +47,13 @@ impl IntoResponse for Error {
                 )))
                 .unwrap(),
             Error::OauthError(oauth_error) => oauth_error.into_response(),
+            Error::RunLangError(s) => Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(Body::from(format!(
+                    "<h2>Lang Runner Error</h2><pre>{}</pre>",
+                    tera::escape_html(&s)
+                )))
+                .unwrap(),
         }
     }
 }
