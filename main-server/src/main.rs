@@ -2,6 +2,7 @@ mod auto_output_format;
 mod controllers;
 mod error;
 mod file_session_storage;
+mod markdown;
 mod models;
 mod session;
 mod test_solution;

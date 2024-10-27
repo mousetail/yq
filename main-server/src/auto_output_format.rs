@@ -18,7 +18,10 @@ use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, to_value, Context, Tera, Value};
 
-use crate::models::account::Account;
+use crate::{
+    markdown::MarkdownFilter,
+    models::account::Account,
+};
 
 #[derive(Serialize)]
 pub struct HtmlContext {
@@ -214,6 +217,7 @@ impl<T: Serialize> AutoOutputFormat<T> {
                 tera.autoescape_on(vec![".html.jinja", ".xml.jinja", ".html", ".xml"]);
                 tera.register_function("languages", get_langs);
                 tera.register_function("modules", load_assets);
+                tera.register_filter("markdown", MarkdownFilter);
                 tera
             })
         });

@@ -5,14 +5,16 @@
   <h1>{{ object.challenge.challenge.name }}</h1>
   <p>
     A challenge by
-    <img src="{{ object.challenge.author_avatar }}&size=18" alt="{{ object.challenge.author_name }} avatar" height="18" />
+    <img src="{{ object.challenge.author_avatar }}&size=18"
+         alt="{{ object.challenge.author_name }} avatar"
+         height="18" />
     {{ object.challenge.author_name }}
     <a href="/challenge/{{ object.challenge.id }}">Edit</a>
   </p>
   <div class="two-column-descripion">
     <div>
       <h3>Descripion</h3>
-      {{ object.challenge.challenge.description }}
+      {{ object.challenge.challenge.description | markdown }}
     </div>
     <div class="leaderboard">
       <h3>Leaderboard</h3>

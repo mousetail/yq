@@ -101,7 +101,7 @@ pub async fn new_challenge(
             )
                 .fetch_one(&pool)
                 .await
-                .map_err(|e| Error::DatabaseError(e))?;
+                .map_err(Error::DatabaseError)?;
 
             Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response())
         }

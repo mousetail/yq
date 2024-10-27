@@ -56,7 +56,7 @@ impl ChallengeWithAuthorInfo {
             .bind(id)
             .fetch_optional(pool)
             .await
-            .map_err(|e| Error::DatabaseError(e))?;
+            .map_err(Error::DatabaseError)?;
 
         Ok(challenge)
     }

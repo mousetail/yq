@@ -171,7 +171,7 @@ async fn run_lang(
     }
 
     let data = serde_json::to_string(&RunnerInput { lang, code, judge })
-        .map_err(|e| RunProcessError::SerializationFailed(e))?;
+        .map_err(RunProcessError::SerializationFailed)?;
     stdin.write_all(data.as_bytes()).await?;
 
     let output = child.output().await?;
