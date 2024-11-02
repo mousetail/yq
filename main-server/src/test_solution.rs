@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use common::RunLangOutput;
 use serde::Serialize;
 
@@ -26,6 +28,7 @@ pub async fn test_solution(
             code,
             judge,
         })
+        .timeout(Duration::from_secs(60))
         .send()
         .await
         .map_err(|_e| Error::RunLangError("Failed to connect to the lang runner".to_string()))?;

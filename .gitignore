@@ -5,3 +5,4 @@ postgres-data
 .sessions
 node_modules
 static/target
+scripts/build

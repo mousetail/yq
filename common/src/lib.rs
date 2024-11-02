@@ -3,12 +3,14 @@ pub mod langs;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct JudgeResult {
     pub pass: bool,
     pub test_cases: Vec<TestCase>,
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RunLangOutput {
     pub tests: JudgeResult,
     pub stderr: String,
@@ -28,6 +30,7 @@ pub enum TestPassState {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TestCase {
     pub name: Option<String>,
     pub pass: TestPassState,

@@ -14,6 +14,29 @@
       {{ modules(modules="js/index.ts") | safe }}
     {% endblock scripts %}
 
+    <!-- temporary hacks to get webworkers to work during dev -->
+    <script>
+        (() => {
+            const OriginalWebWorker = window.Worker;
+
+            class Worker extends OriginalWebWorker {
+                constructor(original_url, type) {
+                    function getWorkerURL(url) {
+                        const content = `import a from ${ JSON.stringify(url) };`;
+                        return URL.createObjectURL(new Blob([content], {
+                            type: "text/javascript"
+                        }));
+                    }
+                    const worker_url = getWorkerURL(original_url);
+                    super(worker_url, type);
+                    URL.revokeObjectURL(worker_url);
+                }
+            }
+
+            window.Worker = Worker;
+        })();
+    </script>
+
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>

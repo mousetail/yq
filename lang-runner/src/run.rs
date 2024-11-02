@@ -110,6 +110,8 @@ async fn run_lang(
             // "--clearenv",
             // "--hostname",
             // "yq",
+            "--proc",
+            "/proc",
             "--ro-bind",
             "/bin",
             "/bin",
@@ -125,10 +127,18 @@ async fn run_lang(
             "/lib",
             "/lib",
             "--ro-bind",
+            "/etc",
+            "/etc",
+            "--ro-bind",
             "/etc/alternatives",
             "/etc/alternatives",
             "--tmpfs",
             "/tmp",
+            "--tmpfs",
+            "/home/yq",
+            "--setenv",
+            "HOME",
+            "/home/yq",
         ])
         .args(["--ro-bind"])
         .arg(code_lang_folder)
@@ -150,12 +160,13 @@ async fn run_lang(
                 .iter()
                 .map(|k| {
                     k.replace("${LANG_LOCATION}", "/judge")
-                        .replace("${FILE_LOCATION}", "/scripts/runner.js")
+                        .replace("${FILE_LOCATION}", "/scripts/runner.ts")
                 })
                 .collect::<Vec<_>>(),
         )
         .stdout(Stdio::piped())
         .stdin(Stdio::piped());
+
     // .args([&format!("/lang/{}", lang.bin_location), code as &str, judge]);
 
     let mut child = command.spawn()?;
@@ -223,7 +234,7 @@ pub async fn process_message(
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<RunLangOutput, RunLangError> {
     // Runner Lang
-    install_lang("nodejs".to_owned(), "22.9.0", lang_versions)
+    install_lang("deno".to_owned(), "2.0.4", lang_versions)
         .await
         .map_err(RunLangError::PluginInstallFailure)?;
 
@@ -235,8 +246,8 @@ pub async fn process_message(
         &message.version,
         &message.code,
         &message.judge,
-        "nodejs",
-        "22.9.0",
+        "deno",
+        "2.0.4",
     )
     .await
     .map_err(RunLangError::RunLangError)?;

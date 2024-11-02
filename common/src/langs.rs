@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 #[derive(Serialize)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct Lang {
     pub name: &'static str,
     pub compile_command: &'static [&'static str],
@@ -20,6 +21,18 @@ pub const LANGS: &[Lang] = &[
         env: &[],
         install_env: &[],
         latest_version: "22.9.0",
+    },
+    Lang {
+        name: "deno",
+        compile_command: &[],
+        run_command: &["${LANG_LOCATION}/bin/deno", "--allow-write=/tmp", "--allow-run", "--allow-read", "${FILE_LOCATION}"],
+        //run_command: &["/usr/bin/env"],
+        plugin: "https://github.com/asdf-community/asdf-deno.git",
+        env: &[
+            ("RUST_BACKTRACE", "1")
+        ],
+        install_env: &[],
+        latest_version: "2.0.4",
     },
     Lang {
         name: "python",

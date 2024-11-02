@@ -11,7 +11,7 @@
     <pre>{{ cases.stderr }}</pre>
   {% endif %}
 
-  {% for test in cases.tests.test_cases %}
+  {% for test in cases.tests.testCases %}
     <div class="test-case test-{{- test.pass | lower }}">
       {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}
 
@@ -25,19 +25,19 @@
         Info
       {% endif %}
 
-      {% if test.result_display.Empty %}
+      {% if test.resultDisplay.Empty %}
 
-      {% elif test.result_display.Text %}
-        <div class="results">{{ test.result_display.Text }}</div>
-      {% elif test.result_display.Diff %}
+      {% elif test.resultDisplay.Text %}
+        <div class="results">{{ test.resultDisplay.Text }}</div>
+      {% elif test.resultDisplay.Diff %}
         <div class="diff">
           <div id="column">
             <h3>Output</h3>
-            <pre>{{ test.result_display.Diff.output }}</pre>
+            <pre>{{ test.resultDisplay.Diff.output }}</pre>
           </div>
           <div id="column">
             <h3>Expected</h3>
-            <pre>{{ test.result_display.Diff.expected }}</pre>
+            <pre>{{ test.resultDisplay.Diff.expected }}</pre>
           </div>
         </div>
       {% endif %}

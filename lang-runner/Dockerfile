@@ -21,7 +21,9 @@ RUN apt-get update -y && apt-get install -y \
   libncurses5-dev \
   libffi-dev \
   libreadline-dev \
-  libssl-dev
+  libssl-dev \
+  zip \
+  unzip
 
 RUN adduser yq
 

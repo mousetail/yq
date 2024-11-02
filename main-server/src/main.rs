@@ -19,7 +19,7 @@ use file_session_storage::FileSessionStorage;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 use tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
 
 #[tokio::main]
@@ -54,6 +54,10 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/", get(all_challenges))
+        .nest_service(
+            "/ts/runner-lib.d.ts",
+            ServeFile::new("scripts/build/runner-lib.d.ts"),
+        )
         .route("/challenge", get(compose_challenge).post(new_challenge))
         .route("/challenge/:id", get(compose_challenge).post(new_challenge))
         .route("/login/github", get(github_login))
