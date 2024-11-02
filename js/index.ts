@@ -1,12 +1,4 @@
 import { basicSetup, EditorView, minimalSetup } from 'codemirror';
-import {
-    createDefaultMapFromCDN,
-    createSystem,
-    createVirtualTypeScriptEnvironment,
-    VirtualTypeScriptEnvironment,
-} from "@typescript/vfs";
-import ts from "typescript";
-import { tsSync, tsFacet, tsAutocomplete, tsLinter, tsHover, tsFacetWorker, tsSyncWorker, tsLinterWorker, tsAutocompleteWorker, tsHoverWorker } from "@valtown/codemirror-ts";
 import { javascript } from '@codemirror/lang-javascript';
 import { autocompletion } from "@codemirror/autocomplete";
 import { WorkerShape } from '@valtown/codemirror-ts/worker';
@@ -28,6 +20,8 @@ function editorFromTextArea(textarea: HTMLTextAreaElement, extensions: typeof mi
 let typeScriptEnvironment: WorkerShape | undefined = undefined;
 
 async function initTypescriptForCodebox(): Promise<typeof minimalSetup> {
+    const { tsFacetWorker, tsSyncWorker, tsLinterWorker, tsAutocompleteWorker, tsHoverWorker } = await import("@valtown/codemirror-ts");
+
     if (typeScriptEnvironment === undefined) {
         const innerWorker = new Worker(new URL("./typescript_worker.ts", import.meta.url), {
             type: "module",

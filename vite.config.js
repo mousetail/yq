@@ -8,6 +8,7 @@ export default defineConfig({
             // overwrite default .html entry
             input: 'js/index.ts',
         },
-        outDir: 'static/target',
-    }
+        outDir: 'static/target'
+    },
+    base: '/static'
 });
