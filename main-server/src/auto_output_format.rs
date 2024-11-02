@@ -18,10 +18,7 @@ use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, to_value, Context, Tera, Value};
 
-use crate::{
-    markdown::MarkdownFilter,
-    models::account::Account,
-};
+use crate::{markdown::MarkdownFilter, models::account::Account};
 
 #[derive(Serialize)]
 pub struct HtmlContext {
@@ -232,6 +229,7 @@ impl<T: Serialize> AutoOutputFormat<T> {
         let mut context = Context::new();
         context.insert("object", &data);
         context.insert("account", &html_context.account);
+        context.insert("dev", &cfg!(debug_assertions));
 
         let html = match tera.render(template, &context) {
             Ok(html) => html,
