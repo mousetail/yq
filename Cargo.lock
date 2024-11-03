@@ -2969,9 +2969,9 @@ dependencies = [
 
 [[package]]
 name = "tower-sessions-file-store"
-version = "0.1.1"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eba34990f41bbe7f2a5b7eea712da94768122abb0993c1e3e8b3ff8329f88d31"
+checksum = "ae7f713344ba830f2228876dfe9c1a9d8d32b25b3275884471efb80e51a02fcd"
 dependencies = [
  "async-trait",
  "serde_json",

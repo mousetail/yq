@@ -55,7 +55,15 @@
         {%- endif -%}
 </textarea>
 
-    <button type="submit">Submit!</button>
+    {% if account %}
+      <button type="submit">Submit!</button>
+    {% else %}
+      <div class="warning">
+        You must be logged in to edit a challenge.
+      </div>
+
+      <button type="submit" disabled>Submit!</button>
+    {% endif%}
   </form>
 
   {% if object.tests %}
