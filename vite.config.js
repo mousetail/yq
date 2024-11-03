@@ -10,5 +10,5 @@ export default defineConfig({
         },
         outDir: 'static/target'
     },
-    base: '/static'
+    base: '/static/target'
 });

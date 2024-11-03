@@ -44,7 +44,13 @@ impl IntoResponse for AccountFetchError {
         match self {
             AccountFetchError::NotLoggedIn => Response::builder()
                 .status(StatusCode::UNAUTHORIZED)
-                .body(Body::from("Not authorized"))
+                .body(Body::from(
+                    r#"<h2>Not authorized</h2>
+                    <p>You must be logged in to perform this action</p>
+
+                    <a href="/login/github">Login</a>
+                "#,
+                ))
                 .unwrap(),
             e => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)

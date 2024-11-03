@@ -1,10 +1,8 @@
 mod auto_output_format;
 mod controllers;
 mod error;
-mod file_session_storage;
 mod markdown;
 mod models;
-mod session;
 mod test_solution;
 
 use axum::{routing::get, Extension, Router};
@@ -15,12 +13,13 @@ use controllers::{
     challenges::{all_challenges, compose_challenge, new_challenge},
     solution::{all_solutions, get_solution, new_solution},
 };
-use file_session_storage::FileSessionStorage;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
+use tower_sessions::ExpiredDeletion;
 use tower_sessions::{cookie::time::Duration, Expiry, SessionManagerLayer};
+use tower_sessions_file_store::FileSessionStorage;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -45,12 +44,17 @@ async fn main() -> anyhow::Result<()> {
         .context("could not connect to database_url")?;
 
     // Setup Sessions
-    let session_store = FileSessionStorage;
-    let session_layer = SessionManagerLayer::new(session_store)
+    let session_store = FileSessionStorage::new();
+    let session_layer = SessionManagerLayer::new(session_store.clone())
         .with_secure(false)
         .with_same_site(tower_sessions::cookie::SameSite::Lax)
         .with_name("yq_session_store_id")
-        .with_expiry(Expiry::OnInactivity(Duration::hours(10)));
+        .with_expiry(Expiry::OnInactivity(Duration::days(360)));
+    let _deletion_task = tokio::task::spawn(
+        session_store
+            .clone()
+            .continuously_delete_expired(tokio::time::Duration::from_secs(60 * 60)),
+    );
 
     let app = Router::new()
         .route("/", get(all_challenges))
