@@ -30,7 +30,11 @@
             <td>
               <img src="{{ solution.author_avatar }}&size=18" alt="{{ solution.author_name }} avatar" height="18" />
             </td>
-            <td>{{ solution.author_name }}</td>
+            <td>
+              <a href="/user/{{ solution.author_id }}">
+                {{ solution.author_name }}
+              </a>
+            </td>
             <td>{{ solution.score }}</td>
           </tr>
         {% else %}

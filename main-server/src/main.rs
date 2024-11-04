@@ -12,6 +12,7 @@ use controllers::{
     auth::{github_callback, github_login},
     challenges::{all_challenges, compose_challenge, new_challenge},
     solution::{all_solutions, get_solution, new_solution},
+    user::get_user,
 };
 use sqlx::postgres::PgPoolOptions;
 use std::env;
@@ -66,6 +67,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/challenge/:id", get(compose_challenge).post(new_challenge))
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))
+        .route("/user/:id", get(get_user))
         .route("/:id/:language", get(all_solutions).post(new_solution))
         .route("/:id/:language/:solution_id", get(get_solution))
         .nest_service("/static", ServeDir::new("static"))
