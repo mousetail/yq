@@ -63,6 +63,8 @@ async fn main() -> anyhow::Result<()> {
             "/ts/runner-lib.d.ts",
             ServeFile::new("scripts/build/runner-lib.d.ts"),
         )
+        .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
+        .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
         .route("/challenge", get(compose_challenge).post(new_challenge))
         .route("/challenge/:id", get(compose_challenge).post(new_challenge))
         .route("/login/github", get(github_login))
