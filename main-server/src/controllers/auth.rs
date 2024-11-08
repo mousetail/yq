@@ -3,7 +3,6 @@ use std::env;
 use axum::extract::Query;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::Extension;
-use markdown_it::common::utils::escape_html;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::{
     AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EmptyExtraTokenFields,
@@ -128,20 +127,17 @@ pub async fn github_callback(
         .map_err(|_k| Error::OauthError(crate::error::OauthError::UserInfoFetchFailed))?;
 
     if response.status().is_success() {
-        let user_info: GithubUser = response
+        let mut user_info: GithubUser = response
             .json()
             .await
             .map_err(|_k| Error::OauthError(crate::error::OauthError::DeserializationFailed))?;
 
         if user_info.avatar_url.len() > 255 {
-            return Ok((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!(
-                    "Bad GitHub avatar url: {}",
-                    escape_html(&user_info.avatar_url)
-                ),
-            )
-                .into_response());
+            // TODO: Figure out why this happens
+            user_info.avatar_url = format!(
+                "https://avatars.githubusercontent.com/u/{}?v=4",
+                user_info.id
+            );
         }
 
         insert_user(&pool, &user_info, &token_res, &session).await?;
