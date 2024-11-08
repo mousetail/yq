@@ -3,6 +3,7 @@ use std::env;
 use axum::extract::Query;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::Extension;
+use markdown_it::common::utils::escape_html;
 use oauth2::basic::{BasicClient, BasicTokenType};
 use oauth2::{
     AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EmptyExtraTokenFields,
@@ -81,7 +82,6 @@ pub struct GithubUser {
     avatar_url: String,
 }
 
-#[axum::debug_handler]
 pub async fn github_callback(
     session: Session,
     Extension(pool): Extension<PgPool>,
@@ -133,7 +133,18 @@ pub async fn github_callback(
             .await
             .map_err(|_k| Error::OauthError(crate::error::OauthError::DeserializationFailed))?;
 
-        insert_user(&pool, &user_info, &token_res, &session).await;
+        if user_info.avatar_url.len() > 255 {
+            return Ok((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!(
+                    "Bad GitHub avatar url: {}",
+                    escape_html(&user_info.avatar_url)
+                ),
+            )
+                .into_response());
+        }
+
+        insert_user(&pool, &user_info, &token_res, &session).await?;
         Ok(Redirect::temporary("/").into_response())
     } else {
         let data = response.bytes().await.unwrap();
@@ -156,14 +167,14 @@ async fn insert_user(
     github_user: &GithubUser,
     token: &StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
     session: &Session,
-) {
+) -> Result<(), Error> {
     let sql = "SELECT id, account FROM account_oauth_codes WHERE id_on_provider=$1";
 
     let user: Option<UserQueryResponse> = sqlx::query_as::<_, UserQueryResponse>(sql)
         .bind(github_user.id)
         .fetch_optional(pool)
         .await
-        .unwrap();
+        .map_err(|e| Error::DatabaseError(e))?;
 
     if let Some(user) = user {
         let sql: &str =
@@ -180,9 +191,11 @@ async fn insert_user(
             .bind(user.id)
             .fetch_optional(pool)
             .await
-            .unwrap();
+            .map_err(|e| Error::DatabaseError(e))?;
 
         session.insert(ACCOUNT_ID_KEY, user.account).await.unwrap();
+
+        Ok(())
     } else {
         let sql: &str = "INSERT INTO accounts(username, avatar) VALUES ($1, $2) RETURNING id";
 
@@ -191,7 +204,7 @@ async fn insert_user(
             .bind(&github_user.avatar_url)
             .fetch_one(pool)
             .await
-            .unwrap();
+            .map_err(|e| Error::DatabaseError(e))?;
 
         let sql: &str =
             "INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
@@ -209,8 +222,10 @@ async fn insert_user(
             .bind(github_user.id)
             .execute(pool)
             .await
-            .unwrap();
+            .map_err(|e| Error::DatabaseError(e))?;
 
         session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
+
+        Ok(())
     }
 }
