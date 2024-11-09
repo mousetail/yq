@@ -32,10 +32,10 @@ pub enum TestPassState {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TestCase {
+    #[serde(default)]
     pub name: Option<String>,
     pub pass: TestPassState,
     pub result_display: ResultDisplay,
-    pub error: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -43,4 +43,5 @@ pub enum ResultDisplay {
     Empty,
     Text(String),
     Diff { output: String, expected: String },
+    Run { output: String, error: String },
 }

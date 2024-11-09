@@ -213,17 +213,19 @@ fn parse_output(out: &[u8]) -> JudgeResult {
         }
         match serde_json::from_slice::<TestCase>(line) {
             Ok(test_case) => test_cases.push(test_case),
-            Err(_) => match serde_json::from_slice::<FinalVerdict>(line) {
-                Ok(FinalVerdict { pass: new_pass }) => pass = new_pass,
-                Err(_e) => test_cases.push(TestCase {
-                    name: Some("Judge Debug Message".to_owned()),
-                    pass: common::TestPassState::Info,
-                    result_display: common::ResultDisplay::Text(
-                        String::from_utf8_lossy(line).to_string(),
-                    ),
-                    error: None,
-                }),
-            },
+            Err(e) => {
+                eprintln!("{e:#?}");
+                match serde_json::from_slice::<FinalVerdict>(line) {
+                    Ok(FinalVerdict { pass: new_pass }) => pass = new_pass,
+                    Err(_e) => test_cases.push(TestCase {
+                        name: Some("Judge Debug Message".to_owned()),
+                        pass: common::TestPassState::Info,
+                        result_display: common::ResultDisplay::Text(
+                            String::from_utf8_lossy(line).to_string(),
+                        ),
+                    }),
+                }
+            }
         }
     }
 

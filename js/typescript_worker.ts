@@ -13,14 +13,14 @@ const fetchDeclarations = async (): Promise<string> => {
         throw new Error(`Failed to fetch type declarations: ${response.status}`)
     }
 
-    return await response.text();
+    return (await response.text()).replaceAll('export', '');
 }
 
 export default Comlink.expose(
     createWorker(async function () {
         const compilerOpts: CompilerOptions = {
             typeRoots: ['/src/types'],
-
+            lib: ['es2018']
         };
         const [declarations, fsMap] = await Promise.all([
             fetchDeclarations(),

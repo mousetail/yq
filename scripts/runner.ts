@@ -2,6 +2,7 @@ import { argv, stdin } from 'node:process';
 import { writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { Code, FinalVerdict, RunCodeResult, TestCase } from './runner-lib.ts';
 
 type Lang = {
     name: string,
@@ -82,12 +83,13 @@ const compile_and_run_program = (() => {
 })();
 
 (async () => {
-    const judge_function = (await import('data:text/typescript,' + encodeURIComponent(
-        readFileSync('/scripts/runner-lib.ts') +
-        '\nexport default ' +
-        judge
-    ))).default as (
-            (code: string, onRunCallback: (program: string, input?: string | undefined) => Promise<RunCodeResult>) => Generator<any>);
+    const judge_function = (
+        await import('data:text/typescript,' + encodeURIComponent(
+            readFileSync('/scripts/runner-lib.ts') +
+            '\nexport default ' +
+            judge
+        ))
+    ).default as ((code: Code) => AsyncGenerator<TestCase, FinalVerdict, undefined>);
 
     const on_run_callback = async (program: string, input?: string | undefined): Promise<RunCodeResult> => {
         writeFile('/tmp/code', program);
@@ -98,7 +100,11 @@ const compile_and_run_program = (() => {
         );
     };
 
-    for await (const testCase of judge_function(code, on_run_callback)) {
-        console.log(JSON.stringify(testCase));
+    const generator = judge_function(new Code(code, on_run_callback));
+
+    let value: IteratorResult<TestCase, FinalVerdict>;
+    while (!(value = await generator.next()).done) {
+        console.log(JSON.stringify(value.value));
     }
+    console.log(JSON.stringify(value.value));
 })();
