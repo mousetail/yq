@@ -42,6 +42,14 @@ pub struct TestCase {
 pub enum ResultDisplay {
     Empty,
     Text(String),
-    Diff { output: String, expected: String },
-    Run { output: String, error: String },
+    Diff {
+        output: String,
+        expected: String,
+    },
+    Run {
+        #[serde(default)]
+        input: Option<String>,
+        output: String,
+        error: String,
+    },
 }

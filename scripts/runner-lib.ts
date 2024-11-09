@@ -1,5 +1,7 @@
 export type PassState = 'Pass' | 'Fail' | 'Warning' | 'Info';
-export type ResultDisplay = { 'Diff': { expected: string, output: string } } | { 'Text': string } | { 'Run': { output: string, error: string } };
+export type ResultDisplay = { 'Diff': { expected: string, output: string } }
+    | { 'Text': string }
+    | { 'Run': { input?: string | undefined, output: string, error: string } };
 
 export class TestCase {
     name: string | undefined;
@@ -105,6 +107,7 @@ export class Code {
         const result = await this.onRunCallback(code, input);
         const runDisplay: TestCase = new TestCase(`Run #${++this.runs}`, 'Info', {
             "Run": {
+                "input": input,
                 "output": result.stdout,
                 "error": result.stderr
             }

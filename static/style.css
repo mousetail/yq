@@ -142,3 +142,13 @@ button {
     border: 1px solid black;
     border-radius: 0;
 }
+
+.hidden {
+    display: none;
+}
+
+#editor-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

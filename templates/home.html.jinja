@@ -48,5 +48,7 @@
     {% endfor %}
   </ul>
 
-  <a href="/challenge">New Challenge</a>
+  {% if account %}
+    <a href="/challenge">New Challenge</a>
+  {% endif %}
 {% endblock content %}
