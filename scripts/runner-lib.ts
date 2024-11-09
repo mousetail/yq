@@ -76,7 +76,7 @@ export class RunResult extends StringResult {
 
     public constructor(code: Code, result: RunCodeResult) {
         super(code, result.stdout);
-        this.stderr = this.stderr;
+        this.stderr = result.stderr;
     }
 
     public error() {
@@ -111,6 +111,11 @@ export class Code {
         })
         console.log(JSON.stringify(runDisplay));
         return new RunResult(this, result);
+    }
+
+    registerTestCase(testCase: TestCase): TestCase {
+        this.testCases.push(testCase);
+        return testCase;
     }
 
     noFailures(): FinalVerdict {
