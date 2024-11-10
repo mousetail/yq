@@ -43,29 +43,32 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <div class="header">
-      <div>
-        <a href="/">
-          <img src="/static/favicon.svg" width="24" alt="Byte Heist" />
-        Home</a>
+    <header>
+      <div class="header-content">
+        <div>
+          <a href="/">
+            <img src="/static/favicon.svg" width="30" alt="Byte Heist" />
+          Home</a>
+        </div>
+        <div>
+          {% if account %}
+            {{ account.username }}
+            <img src="{{ account.avatar }}&size=18" alt="{{ account.username }} profile picture" />
+          {% else %}
+            <a href="/login/github">Login</a>
+          {% endif %}
+        </div>
       </div>
-      <div>
-        {% if account %}
-          {{ account.username }}
-          <img src="{{ account.avatar }}&size=18" alt="{{ account.username }} profile picture" />
-        {% else %}
-          <a href="/login/github">Login</a>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="content">
+    </header>
+    <main>
       {% block content %}
       {% endblock content %}
-    </div>
-
+    </main>
     <footer>
-      <a href="https://discord.gg/ugbfdgzpjK">Join The Discord</a>
+      <div class="footer-content">
+        <p>Byte Heist.</p>
+        <p><a href="https://discord.gg/ugbfdgzpjK">Join The Discord</a>.</p>
+      </div>
     </footer>
   </body>
 </html>
