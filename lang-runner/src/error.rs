@@ -34,6 +34,11 @@ pub enum RunLangError {
         #[serde(serialize_with = "serialize_error")]
         std::io::Error,
     ),
+    SemaphoreError(
+        #[allow(unused)]
+        #[serde(serialize_with = "serialize_error")]
+        tokio::sync::AcquireError,
+    ),
 }
 
 impl From<std::io::Error> for RunLangError {

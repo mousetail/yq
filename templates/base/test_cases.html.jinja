@@ -11,6 +11,8 @@
     <pre>{{ cases.stderr }}</pre>
   {% endif %}
 
+  {% if cases.timedOut %}The process timed out after 3 seconds{% endif %}
+
   {% for test in cases.tests.testCases %}
     <div class="test-case test-{{- test.pass | lower }}">
       {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}

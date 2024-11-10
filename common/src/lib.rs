@@ -14,6 +14,7 @@ pub struct JudgeResult {
 pub struct RunLangOutput {
     pub tests: JudgeResult,
     pub stderr: String,
+    pub timed_out: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -38,6 +39,12 @@ pub struct TestCase {
     pub result_display: ResultDisplay,
 }
 
+impl TestCase {
+    pub fn truncate(&mut self, length: usize) {
+        self.result_display.truncate(length);
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub enum ResultDisplay {
     Empty,
@@ -52,4 +59,28 @@ pub enum ResultDisplay {
         output: String,
         error: String,
     },
+}
+
+impl ResultDisplay {
+    pub fn truncate(&mut self, length: usize) {
+        match self {
+            ResultDisplay::Empty => {}
+            ResultDisplay::Text(e) => e.truncate(length),
+            ResultDisplay::Diff { output, expected } => {
+                output.truncate(length);
+                expected.truncate(length);
+            }
+            ResultDisplay::Run {
+                input,
+                output,
+                error,
+            } => {
+                if let Some(input) = input {
+                    input.truncate(length);
+                }
+                output.truncate(length);
+                error.truncate(length);
+            }
+        }
+    }
 }
