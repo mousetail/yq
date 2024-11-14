@@ -11,9 +11,9 @@
     {{ object.challenge.author_name }}
     <a href="/challenge/{{ object.challenge.id }}">Edit</a>
   </p>
-  <div class="two-column-descripion">
+  <div class="two-column-description">
     <div>
-      <h3>Descripion</h3>
+      <h3>Description</h3>
       {{ object.challenge.challenge.description | markdown }}
     </div>
     <div class="leaderboard">
@@ -31,9 +31,7 @@
               <img src="{{ solution.author_avatar }}&size=18" alt="{{ solution.author_name }} avatar" height="18" />
             </td>
             <td>
-              <a href="/user/{{ solution.author_id }}">
-                {{ solution.author_name }}
-              </a>
+              <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
             </td>
             <td>{{ solution.score }}</td>
           </tr>
@@ -53,7 +51,15 @@
   </div>
 
   <form method="post">
-    <textarea name="code" class="codemirror">
+    <div class="hidden" id="editor-controls">
+      <div>
+        <span id="byte-counter"></span> Bytes
+      </div>
+      <div>
+        <button type="button" id="restore-solution-button">Restore solution</button>
+      </div>
+    </div>
+    <textarea name="code" class="codemirror" id="main-code">
         {%- if object.code -%}
           {{- object.code -}}
         {%- endif -%}
@@ -62,15 +68,11 @@
     {% if account %}
       <button type="submit">Submit!</button>
     {% else %}
-      <div class="warning">
-        You must be logged in to edit a challenge.
-      </div>
+      <div class="warning">You must be logged in to submit a solution.</div>
 
       <button type="submit" disabled>Submit!</button>
-    {% endif%}
+    {% endif %}
   </form>
 
-  {% if object.tests %}
-    {{ test_cases::test_cases(cases=object.tests) }}
-  {% endif %}
+  {% if object.tests %}{{ test_cases::test_cases(cases=object.tests) }}{% endif %}
 {% endblock content %}

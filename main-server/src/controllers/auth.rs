@@ -15,7 +15,9 @@ use sqlx::prelude::FromRow;
 use sqlx::{PgPool, Pool, Postgres};
 use tower_sessions::Session;
 
+use crate::discord::post_new_golfer;
 use crate::error::Error;
+use crate::models::account::Account;
 use crate::models::InsertedId;
 
 const GITHUB_SESSION_CSRF_KEY: &str = "GITHUB_SESSION_CSRF_TOKEN";
@@ -221,6 +223,12 @@ async fn insert_user(
             .map_err(|e| Error::DatabaseError(e))?;
 
         session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
+
+        tokio::spawn(post_new_golfer(Account {
+            id: new_user_id.0,
+            username: github_user.login.clone(),
+            avatar: github_user.avatar_url.clone(),
+        }));
 
         Ok(())
     }

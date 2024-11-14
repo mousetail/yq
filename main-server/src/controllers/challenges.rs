@@ -10,6 +10,7 @@ use sqlx::PgPool;
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
+    discord::post_new_challenge,
     error::Error,
     models::{
         account::Account,
@@ -102,6 +103,8 @@ pub async fn new_challenge(
                 .fetch_one(&pool)
                 .await
                 .map_err(Error::DatabaseError)?;
+
+            tokio::spawn(post_new_challenge(account, challenge, row));
 
             Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response())
         }

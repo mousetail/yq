@@ -3,8 +3,9 @@ import { javascript } from '@codemirror/lang-javascript';
 import { autocompletion } from "@codemirror/autocomplete";
 import { WorkerShape } from '@valtown/codemirror-ts/worker';
 import * as Comlink from "comlink";
+import { StateEffect } from "@codemirror/state"
 
-function editorFromTextArea(textarea: HTMLTextAreaElement, extensions: typeof minimalSetup) {
+function editorFromTextArea(textarea: HTMLTextAreaElement, extensions: typeof minimalSetup): EditorView {
     let view = new EditorView({ doc: textarea.value, extensions })
     textarea.parentNode?.insertBefore(view.dom, textarea)
     textarea.style.display = "none"
@@ -48,7 +49,43 @@ async function initTypescriptForCodebox(): Promise<typeof minimalSetup> {
     ]
 }
 
+const setupEditorControls = (editorControls: HTMLElement, mainTextArea: EditorView) => {
+    editorControls.classList.remove('hidden');
+    const byteCountElement = editorControls.querySelector('#byte-counter')!;
+    const resetButton = editorControls.querySelector('#restore-solution-button')!;
+    const textEncoder = new TextEncoder();
+    const originalText = mainTextArea.state.doc.toString();
+
+    byteCountElement.textContent = '' + textEncoder.encode(originalText).length;
+
+    mainTextArea.dispatch(
+        {
+            effects: StateEffect.appendConfig.of([
+                EditorView.updateListener.of((update) => {
+                    if (update.docChanged) {
+                        byteCountElement.textContent = '' + [...mainTextArea.state.doc.iterLines()].reduce((a, b) => a + textEncoder.encode(b).length, 0);
+                    }
+                })
+            ])
+        }
+    )
+
+    resetButton.addEventListener('click', () => {
+        mainTextArea.dispatch(
+            {
+                changes: {
+                    from: 0,
+                    to: mainTextArea.state.doc.length,
+                    insert: originalText
+                }
+            }
+        )
+    })
+}
+
 window.addEventListener('load', async () => {
+    let mainTextArea: EditorView;
+
     for (const textarea of document.querySelectorAll<HTMLTextAreaElement>('textarea.codemirror')) {
 
         let plugins = basicSetup;
@@ -56,7 +93,17 @@ window.addEventListener('load', async () => {
             plugins = await initTypescriptForCodebox()
         }
         console.log("Replacing textarea with codemirror");
-        editorFromTextArea(textarea, plugins);
+        let view = editorFromTextArea(textarea, plugins);
+        if (textarea.id === 'main-code') {
+            mainTextArea = view;
+        }
+    };
+
+
+    let editorControls = document.getElementById('editor-controls');
+    if (editorControls !== null) {
+        console.log("editor controls exists");
+        setupEditorControls(editorControls, mainTextArea!);
     }
 });
 

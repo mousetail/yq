@@ -29,7 +29,8 @@ pub const LANGS: &[Lang] = &[
         //run_command: &["/usr/bin/env"],
         plugin: "https://github.com/asdf-community/asdf-deno.git",
         env: &[
-            ("RUST_BACKTRACE", "1")
+            ("RUST_BACKTRACE", "1"),
+            ("NO_COLOR", "1")
         ],
         install_env: &[],
         latest_version: "2.0.4",

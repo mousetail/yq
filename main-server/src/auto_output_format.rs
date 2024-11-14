@@ -161,11 +161,11 @@ fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
     #[cfg(debug_assertions)]
     {
         let mut out: String =
-            r#"<script type="module" src="http://localhost:5173/@vite/client"></script>"#
+            r#"<script type="module" src="http://localhost:5173/static/target/@vite/client"></script>"#
                 .to_string();
         for module in modules {
             out.push_str(&format!(
-                r#"<script type="module" src="http://localhost:5173/{}"></script>"#,
+                r#"<script type="module" src="http://localhost:5173/static/target/{}"></script>"#,
                 escape_html(module)
             ));
         }

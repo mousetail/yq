@@ -1,5 +1,6 @@
 mod cachemap;
 mod error;
+mod parse_output;
 mod run;
 
 use std::sync::Arc;
@@ -19,42 +20,6 @@ pub struct Message {
     code: String,
     judge: String,
 }
-
-// fn main() {
-//     println!("Starting!");
-
-//     let mut lang_versions = get_lang_versions();
-//     println!("{lang_versions:?}");
-
-//     let messages = [
-//         Message::Install {
-//             lang: "nodejs".to_owned(),
-//             version: "17.3.0".to_owned(),
-//         },
-//         Message::Install {
-//             lang: "python".to_owned(),
-//             version: "3.12.0".to_owned(),
-//         },
-//         Message::Run {
-//             lang: "nodejs".to_owned(),
-//             version: "17.3.0".to_owned(),
-//             code: "console.log(\"Hello World!\");".to_owned(),
-//         },
-//         Message::Run {
-//             lang: "python".to_owned(),
-//             version: "3.12.0".to_owned(),
-//             code: "import math\nprint(f\"Hello World! {math.sqrt(25)}\");".to_owned(),
-//         },
-//     ];
-
-//     for message in messages {
-//         println!("processing message {message:?}");
-//         process_message(message, &mut lang_versions).unwrap();
-//     }
-
-//     let lang_versions = get_lang_versions();
-//     println!("{lang_versions:?}");
-// }
 
 #[tokio::main]
 async fn main() {

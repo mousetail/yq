@@ -11,6 +11,8 @@
     <pre>{{ cases.stderr }}</pre>
   {% endif %}
 
+  {% if cases.timedOut %}The process timed out after 3 seconds{% endif %}
+
   {% for test in cases.tests.testCases %}
     <div class="test-case test-{{- test.pass | lower }}">
       {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}
@@ -31,13 +33,28 @@
         <div class="results">{{ test.resultDisplay.Text }}</div>
       {% elif test.resultDisplay.Diff %}
         <div class="diff">
-          <div id="column">
+          <div class="column">
             <h3>Output</h3>
             <pre>{{ test.resultDisplay.Diff.output }}</pre>
           </div>
-          <div id="column">
+          <div class="column">
             <h3>Expected</h3>
             <pre>{{ test.resultDisplay.Diff.expected }}</pre>
+          </div>
+        </div>
+      {% elif test.resultDisplay.Run %}
+        <div class="diff">
+          <div class="column">
+            <h3>Input</h3>
+            <pre>{{ test.resultDisplay.Run.input }}</pre>
+          </div>
+          <div class="column">
+            <h3>Standard Output</h3>
+            <pre>{{ test.resultDisplay.Run.output }}</pre>
+          </div>
+          <div class="column">
+            <h3>Standard Error</h3>
+            <pre>{{ test.resultDisplay.Run.error }}</pre>
           </div>
         </div>
       {% endif %}

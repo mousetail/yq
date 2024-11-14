@@ -24,12 +24,9 @@
     {% if account %}
       <button type="submit">Submit!</button>
     {% else %}
-      <div class="warning">
-        You must be logged in to submit your answer.
-      </div>
-
+      <div class="warning">You must be logged in to edit or create a challenge.</div>
       <button type="submit" disabled>Submit!</button>
-    {% endif%}
+    {% endif %}
 
     <div>
       {% if object.tests %}{{ test_cases::test_cases(cases=object.tests) }}{% endif %}

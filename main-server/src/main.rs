@@ -1,5 +1,6 @@
 mod auto_output_format;
 mod controllers;
+mod discord;
 mod error;
 mod markdown;
 mod models;
