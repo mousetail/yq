@@ -85,6 +85,11 @@ async fn main() -> anyhow::Result<()> {
     ))
     .await
     .unwrap();
+
+    if let Ok(addr) = listener.local_addr() {
+        println!("Listening on http://{addr:?}");
+    }
+
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await

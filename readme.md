@@ -39,6 +39,7 @@ sqlx migrate run
 
 First, update the typescript definitions: (Optional, but allows the challenge editor to work)
 ```bash
+npm install  # install typescript compiler
 make ts-build-runner
 ```
 This creates typescript definition files used for the challenge ditor.
