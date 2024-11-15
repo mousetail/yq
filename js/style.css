@@ -25,6 +25,7 @@ footer {
   border-top: 3px solid var(--light-border);
   padding: 5rem 1rem;
 }
+
 .footer-content {
   margin: 0 auto;
   max-width: 58rem;
@@ -42,6 +43,7 @@ ol {
 a {
   color: var(--link);
 }
+
 a:visited {
   color: var(--link-visited);
 }
@@ -50,6 +52,7 @@ header {
   border-bottom: 3px solid var(--light-border);
   padding: 1rem;
 }
+
 .header-content {
   margin: 0 auto;
   max-width: 60rem;
@@ -57,7 +60,8 @@ header {
   justify-content: space-between;
   align-items: center;
 }
-.header-content > div {
+
+.header-content>div {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -77,23 +81,27 @@ main {
   gap: 0.6rem;
   max-width: 65ch;
 }
-.content li + li {
+
+.content li+li {
   margin-top: 0.6rem;
 }
 
 #challenges {
   padding: 1rem;
 }
+
 #challenges ul {
   display: flex;
   flex-direction: column;
   list-style-type: none;
 }
+
 #challenges li {
   display: block;
   padding: 0.6rem;
 }
-#challenges li + li {
+
+#challenges li+li {
   border-top: 3px solid var(--light-border);
 }
 
@@ -111,6 +119,7 @@ textarea:focus-within {
 .cm-editor {
   border: 1px solid rgb(227, 227, 227);
   min-height: 8rem;
+  background-color: white;
 }
 
 .cm-editor:focus-within,
@@ -156,12 +165,13 @@ textarea:focus-within {
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
   }
+
   #jump-challenges {
     display: none;
   }
 }
 
-.leaderboard table tr:not(:last-child) > td {
+.leaderboard table tr:not(:last-child)>td {
   border-bottom: 1px solid black;
 }
 
