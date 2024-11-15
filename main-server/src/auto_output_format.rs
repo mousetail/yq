@@ -18,7 +18,7 @@ use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, to_value, Context, Tera, Value};
 
-use crate::{markdown::MarkdownFilter, models::account::Account};
+use crate::{markdown::MarkdownFilter, models::account::Account, vite::load_assets};
 
 #[derive(Serialize)]
 pub struct HtmlContext {
@@ -95,100 +95,6 @@ fn get_langs(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
     }
     to_value(LANGS).map_err(tera::Error::json)
 }
-
-#[cfg(not(debug_assertions))]
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct ManifestEntry {
-    file: String,
-    #[serde(default)]
-    name: Option<String>,
-    #[serde(default)]
-    is_entry: bool,
-    #[serde(default)]
-    css: Vec<String>,
-    #[serde(default)]
-    imports: Vec<String>,
-    #[serde(default)]
-    dynamic_imports: Vec<String>,
-}
-
-#[cfg(not(debug_assertions))]
-impl ManifestEntry {
-    fn find_all_imports(mut files: Vec<&str>) -> Vec<String> {
-        use std::fs::OpenOptions;
-
-        let manifest = VITE_MANIFEST.get_or_init(|| {
-            let file = OpenOptions::new()
-                .read(true)
-                .open("static/target/.vite/manifest.json")
-                .unwrap();
-
-            serde_json::from_reader(file).unwrap()
-        });
-
-        let mut output = vec![];
-        while let Some(file) = files.pop() {
-            let value = manifest.get(file).unwrap();
-            output.push(value.file.clone());
-
-            for import in &value.imports {
-                files.push(import);
-            }
-        }
-
-        output
-    }
-}
-
-#[cfg(not(debug_assertions))]
-static VITE_MANIFEST: OnceLock<HashMap<String, ManifestEntry>> = OnceLock::new();
-
-fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error> {
-    let scripts = values
-        .get("modules")
-        .ok_or_else(|| tera::Error::msg("Expected argument \"modules\'"))?;
-    let modules = match scripts {
-        Value::Array(arr) => arr
-            .iter()
-            .map(|k| k.as_str())
-            .collect::<Option<Vec<&str>>>()
-            .ok_or_else(|| tera::Error::msg("Expected modules to be an array of strings"))?,
-        Value::String(k) => vec![k.as_str()],
-        _ => return Err(tera::Error::msg("Expected scripts to be a string or array")),
-    };
-
-    #[cfg(debug_assertions)]
-    {
-        let mut out: String =
-            r#"<script type="module" src="http://localhost:5173/static/target/@vite/client"></script>"#
-                .to_string();
-        for module in modules {
-            out.push_str(&format!(
-                r#"<script type="module" src="http://localhost:5173/static/target/{}"></script>"#,
-                escape_html(module)
-            ));
-        }
-
-        Ok(Value::String(out))
-    }
-    #[cfg(not(debug_assertions))]
-    {
-        let scripts = ManifestEntry::find_all_imports(modules);
-        return Ok(Value::String(
-            scripts
-                .into_iter()
-                .map(|script| {
-                    format!(
-                        r#"<script type="module" src="/static/target/{}"></script>"#,
-                        escape_html(&script)
-                    )
-                })
-                .collect(),
-        ));
-    }
-}
-
 impl<T: Serialize> AutoOutputFormat<T> {
     pub fn new(data: T, template: &'static str, format: Format) -> Self {
         AutoOutputFormat {

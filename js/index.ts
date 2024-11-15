@@ -4,6 +4,7 @@ import { autocompletion } from "@codemirror/autocomplete";
 import { WorkerShape } from '@valtown/codemirror-ts/worker';
 import * as Comlink from "comlink";
 import { StateEffect } from "@codemirror/state"
+import "./style.css";
 
 function editorFromTextArea(textarea: HTMLTextAreaElement, extensions: typeof minimalSetup): EditorView {
     let view = new EditorView({ doc: textarea.value, extensions })

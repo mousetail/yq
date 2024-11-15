@@ -5,6 +5,7 @@ mod error;
 mod markdown;
 mod models;
 mod test_solution;
+mod vite;
 
 use axum::{routing::get, Extension, Router};
 
