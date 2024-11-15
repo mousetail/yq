@@ -64,7 +64,11 @@ const setupEditorControls = (editorControls: HTMLElement, mainTextArea: EditorVi
             effects: StateEffect.appendConfig.of([
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
-                        byteCountElement.textContent = '' + [...mainTextArea.state.doc.iterLines()].reduce((a, b) => a + textEncoder.encode(b).length, 0);
+                        byteCountElement.textContent = '' +
+                            [...mainTextArea.state.doc.iterLines()].reduce(
+                                (a, b) => a + textEncoder.encode(b).length + 1,
+                                0
+                            );
                     }
                 })
             ])

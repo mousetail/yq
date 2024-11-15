@@ -13,8 +13,6 @@ use axum::{
 };
 use common::langs::LANGS;
 use reqwest::StatusCode;
-#[cfg(not(debug_assertions))]
-use serde::Deserialize;
 use serde::{de::DeserializeOwned, Serialize};
 use tera::{escape_html, to_value, Context, Tera, Value};
 
