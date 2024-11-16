@@ -232,7 +232,7 @@ pub async fn process_message(
     let _semaphore = RUNS_SEMAPHORE
         .acquire()
         .await
-        .map_err(|e| RunLangError::SemaphoreError(e))?;
+        .map_err(RunLangError::SemaphoreError)?;
     let output = run_lang(
         &message.lang,
         &message.version,

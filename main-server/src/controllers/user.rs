@@ -29,7 +29,7 @@ pub async fn get_user(
     let user_name = query_scalar!("SELECT username FROM accounts WHERE id=$1", id)
         .fetch_optional(&pool)
         .await
-        .map_err(|e| Error::DatabaseError(e))?;
+        .map_err(Error::DatabaseError)?;
     let Some(user_name) = user_name else {
         return Err(Error::NotFound);
     };
@@ -42,7 +42,7 @@ pub async fn get_user(
         WHERE solutions.author=$1",
         id
     ).fetch_all(&pool).await
-    .map_err(|e|Error::DatabaseError(e))?;
+    .map_err(Error::DatabaseError)?;
 
     Ok(AutoOutputFormat::new(
         UserInfo {

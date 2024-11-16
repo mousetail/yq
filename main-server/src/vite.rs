@@ -86,14 +86,14 @@ pub fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error
         Ok(Value::String(out))
     } else {
         let imports = ManifestEntry::find_all_imports(modules);
-        return Ok(Value::String(
+        Ok(Value::String(
             imports
                 .scripts
                 .into_iter()
                 .map(|script| {
                     format!(
                         r#"<script type="module" src="/static/target/{}"></script>"#,
-                        escape_html(&script)
+                        escape_html(script)
                     )
                 })
                 .chain(imports.styles.into_iter().map(|style| {
@@ -103,6 +103,6 @@ pub fn load_assets(values: &HashMap<String, Value>) -> Result<Value, tera::Error
                     )
                 }))
                 .collect(),
-        ));
+        ))
     }
 }

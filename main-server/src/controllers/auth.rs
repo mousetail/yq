@@ -172,7 +172,7 @@ async fn insert_user(
         .bind(github_user.id)
         .fetch_optional(pool)
         .await
-        .map_err(|e| Error::DatabaseError(e))?;
+        .map_err(Error::DatabaseError)?;
 
     if let Some(user) = user {
         let sql: &str =
@@ -189,7 +189,7 @@ async fn insert_user(
             .bind(user.id)
             .fetch_optional(pool)
             .await
-            .map_err(|e| Error::DatabaseError(e))?;
+            .map_err(Error::DatabaseError)?;
 
         session.insert(ACCOUNT_ID_KEY, user.account).await.unwrap();
 
@@ -202,7 +202,7 @@ async fn insert_user(
             .bind(&github_user.avatar_url)
             .fetch_one(pool)
             .await
-            .map_err(|e| Error::DatabaseError(e))?;
+            .map_err(Error::DatabaseError)?;
 
         let sql: &str =
             "INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
@@ -220,7 +220,7 @@ async fn insert_user(
             .bind(github_user.id)
             .execute(pool)
             .await
-            .map_err(|e| Error::DatabaseError(e))?;
+            .map_err(Error::DatabaseError)?;
 
         session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
 

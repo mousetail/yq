@@ -30,7 +30,7 @@ pub enum DiscordError {
     BadStatusCode(#[allow(unused)] StatusCode),
 }
 
-pub async fn post_discord_webhook<'a>(request: WebHookRequest<'a>) -> Result<(), DiscordError> {
+pub async fn post_discord_webhook(request: WebHookRequest<'_>) -> Result<(), DiscordError> {
     let webhook_url = match std::env::var("DISCORD_WEBHOOK_URL") {
         Ok(value) => value,
         Err(VarError::NotPresent) => return Ok(()),

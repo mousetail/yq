@@ -4,6 +4,7 @@ use reqwest::StatusCode;
 #[derive(Debug)]
 pub enum Error {
     NotFound,
+    #[allow(clippy::enum_variant_names)]
     ServerError,
     DatabaseError(sqlx::Error),
     OauthError(OauthError),

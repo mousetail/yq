@@ -56,8 +56,8 @@ pub async fn parse_judge_result_from_stream(mut stream: impl AsyncReadExt + Unpi
         }
         println!(
             "Received {value} data from remote: {}",
-            (&buffer[..20])
-                .into_iter()
+            buffer[..20]
+                .iter()
                 .map(|&k| k as char)
                 .collect::<String>()
         );
@@ -74,5 +74,5 @@ pub async fn parse_judge_result_from_stream(mut stream: impl AsyncReadExt + Unpi
         line_buffer.extend_from_slice(part);
     }
     eprintln!("Output Stream Closed");
-    return judge_result;
+    judge_result
 }

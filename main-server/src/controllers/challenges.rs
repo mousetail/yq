@@ -28,18 +28,18 @@ pub struct AllChallengesOutput {
 pub async fn all_challenges(
     Extension(pool): Extension<PgPool>,
     format: Format,
-) -> AutoOutputFormat<AllChallengesOutput> {
-    let sql = "SELECT * FROM challenges ORDER BY name DESC";
+) -> Result<AutoOutputFormat<AllChallengesOutput>, Error> {
+    let sql = "SELECT * FROM challenges ORDER BY created_at DESC";
     let challenges = sqlx::query_as::<_, Challenge>(sql)
         .fetch_all(&pool)
         .await
-        .unwrap();
+        .map_err(Error::DatabaseError)?;
 
-    AutoOutputFormat::new(
+    Ok(AutoOutputFormat::new(
         AllChallengesOutput { challenges },
         "home.html.jinja",
         format,
-    )
+    ))
 }
 
 #[axum::debug_handler]
