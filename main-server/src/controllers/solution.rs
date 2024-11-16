@@ -132,7 +132,9 @@ pub async fn new_solution(
                 sqlx::query!(
                     "UPDATE solutions SET 
                         code=$1,
-                        score=$2
+                        score=$2,
+                        valid=true,
+                        validated_at=now()
                     WHERE id=$3",
                     solution.code,
                     solution.code.len() as i32,
