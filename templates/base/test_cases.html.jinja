@@ -43,11 +43,16 @@
           </div>
         </div>
       {% elif test.resultDisplay.Run %}
-        <div class="diff">
-          <div class="column">
-            <h3>Input</h3>
-            <pre>{{ test.resultDisplay.Run.input }}</pre>
-          </div>
+        <div class="diff
+                    {% if test.resultDisplay.Run.input and test.resultDisplay.Run.input != '' %}
+                      diff-three-column
+                    {% endif %}">
+          {% if test.resultDisplay.Run.input and test.resultDisplay.Run.input != '' %}
+            <div class="column">
+              <h3>Input</h3>
+              <pre>{{ test.resultDisplay.Run.input }}</pre>
+            </div>
+          {% endif %}
           <div class="column">
             <h3>Standard Output</h3>
             <pre>{{ test.resultDisplay.Run.output }}</pre>
