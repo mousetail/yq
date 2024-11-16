@@ -23,6 +23,7 @@ pub struct Code {
     pub code: String,
     pub score: i32,
     pub id: i32,
+    pub valid: bool,
 }
 
 impl Code {
@@ -35,7 +36,7 @@ impl Code {
         sqlx::query_as!(
             Code,
             r#"
-                SELECT code, score, id from solutions
+                SELECT code, score, id, valid from solutions
                 WHERE author=$1 AND challenge=$2 AND language=$3
                 ORDER BY score ASC
                 LIMIT 1
@@ -75,7 +76,7 @@ impl LeaderboardEntry {
                 accounts.avatar as author_avatar,
                 score FROM solutions
             LEFT JOIN accounts ON solutions.author = accounts.id
-            WHERE solutions.challenge=$1 AND solutions.language=$2
+            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
             ORDER BY solutions.score ASC
             ",
             challenge_id,

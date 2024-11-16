@@ -51,6 +51,12 @@
   </div>
 
   <form method="post">
+    {% if object.previous_solution_invalid %}
+      <div class="warning">
+        Your previous submitted solution has been made invalid due to updates in the challenge. Please fix your solution before it will
+        be added back to the leaderboard.
+      </div>
+    {% endif %}
     <div class="hidden" id="editor-controls">
       <div>
         <span id="byte-counter"></span> Bytes

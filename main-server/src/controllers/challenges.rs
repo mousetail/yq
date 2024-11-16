@@ -16,6 +16,7 @@ use crate::{
         account::Account,
         challenge::{Challenge, ChallengeWithAuthorInfo, NewChallenge, NewChallengeWithTests},
     },
+    solution_invalidation::notify_challenge_updated,
     test_solution::test_solution,
 };
 
@@ -120,6 +121,9 @@ pub async fn new_challenge(
             .execute(&pool)
             .await
             .unwrap();
+
+            // Tells the solution invalidator task to re-check all solutions
+            notify_challenge_updated();
 
             Ok(AutoOutputFormat::new(
                 NewChallengeWithTests {

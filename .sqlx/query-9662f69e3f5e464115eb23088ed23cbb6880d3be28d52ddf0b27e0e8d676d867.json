@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT code, score, id from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY score ASC\n                LIMIT 1\n            ",
+  "query": "\n                SELECT code, score, id, valid from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY score ASC\n                LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -17,6 +17,11 @@
         "ordinal": 2,
         "name": "id",
         "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "valid",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -29,8 +34,9 @@
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "81532f9f3b016ebc8715e36d7a17bb6840149d5932b2f58e308bc51e12cd0962"
+  "hash": "9662f69e3f5e464115eb23088ed23cbb6880d3be28d52ddf0b27e0e8d676d867"
 }

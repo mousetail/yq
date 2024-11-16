@@ -20,6 +20,7 @@ pub struct AllSolutionsOutput {
     leaderboard: Vec<LeaderboardEntry>,
     tests: Option<RunLangOutput>,
     code: Option<String>,
+    previous_solution_invalid: bool
 }
 
 pub async fn all_solutions(
@@ -50,6 +51,7 @@ pub async fn all_solutions(
             challenge,
             leaderboard,
             tests: None,
+            previous_solution_invalid: code.as_ref().is_some_and(|e|!e.valid),
             code: code.map(|d| d.code),
         },
         "challenge.html.jinja",
@@ -102,6 +104,8 @@ pub async fn new_solution(
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 
+    let previous_solution_invalid = previous_code.as_ref().is_some_and(|e|!e.valid);
+
     let status = if test_result.tests.pass {
         match previous_code {
             None => {
@@ -120,7 +124,11 @@ pub async fn new_solution(
 
                 StatusCode::CREATED
             }
-            Some(w) if w.score >= solution.code.len() as i32 => {
+            Some(w) if 
+                // Always replace an invalid solution
+                !w.valid
+                // Replace a solution if the score is better
+                || w.score >= solution.code.len() as i32 => {
                 sqlx::query!(
                     "UPDATE solutions SET 
                         code=$1,
@@ -152,6 +160,7 @@ pub async fn new_solution(
             .await,
             tests: Some(test_result),
             code: Some(solution.code),
+            previous_solution_invalid
         },
         "challenge.html.jinja",
         format,

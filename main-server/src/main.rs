@@ -4,6 +4,7 @@ mod discord;
 mod error;
 mod markdown;
 mod models;
+mod solution_invalidation;
 mod test_solution;
 mod vite;
 
@@ -16,6 +17,7 @@ use controllers::{
     solution::{all_solutions, get_solution, new_solution},
     user::get_user,
 };
+use solution_invalidation::solution_invalidation_task;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tokio::signal;
@@ -58,6 +60,8 @@ async fn main() -> anyhow::Result<()> {
             .clone()
             .continuously_delete_expired(tokio::time::Duration::from_secs(60 * 60)),
     );
+
+    let _invalidation_task = tokio::task::spawn(solution_invalidation_task(pool.clone()));
 
     let app = Router::new()
         .route("/", get(all_challenges))
