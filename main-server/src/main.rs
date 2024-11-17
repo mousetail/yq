@@ -6,6 +6,7 @@ mod markdown;
 mod models;
 mod slug;
 mod solution_invalidation;
+mod strip_trailing_slashes;
 mod test_solution;
 mod vite;
 
@@ -24,6 +25,7 @@ use controllers::{
 use solution_invalidation::solution_invalidation_task;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
+use strip_trailing_slashes::strip_trailing_slashes;
 use tokio::signal;
 use tower_http::services::{ServeDir, ServeFile};
 use tower_sessions::ExpiredDeletion;
@@ -95,6 +97,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/user/:id", get(get_user))
         .route("/:id/:language", get(challenge_redirect_no_slug))
         .nest_service("/static", ServeDir::new("static"))
+        .fallback(get(strip_trailing_slashes))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
         .layer(session_layer);

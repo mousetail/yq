@@ -1,4 +1,4 @@
-use axum::{extract::Path, http::StatusCode, response::Redirect, Extension, Json};
+use axum::{extract::Path, http::StatusCode, response::Redirect, Extension};
 use common::{langs::LANGS, RunLangOutput};
 use serde::Serialize;
 use sqlx::{query_scalar, PgPool};
@@ -7,7 +7,7 @@ use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format}, error::Error, models::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
-        solutions::{Code, LeaderboardEntry, NewSolution, Solution},
+        solutions::{Code, LeaderboardEntry, NewSolution},
     }, slug::Slug, test_solution::test_solution
 };
 
