@@ -1,3 +1,8 @@
+ifneq (,$(wildcard ./.env.local))
+    include .env.local
+    export
+endif
+
 .PHONY: first-time-setup
 first-time-setup:
 	touch .env.local
@@ -29,3 +34,11 @@ ts-build-runner:
 restart-runner:
 	cargo build --package lang-runner
 	docker container kill --signal USR1 yet-to-be-named-golfing-site-yq-runner-1
+
+.PHONY: production-build
+production-build:
+	npm install
+	make ts-build-runner
+	npx vite build
+	cargo sqlx migrate run --database-url ${DATABASE_URL}
+	bash -c "SQLX_OFFLINE=true cargo build --release --package main-server"
