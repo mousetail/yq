@@ -1,17 +1,14 @@
-use axum::{extract::Path, http::StatusCode, Extension, Json};
+use axum::{extract::Path, http::StatusCode, response::Redirect, Extension, Json};
 use common::{langs::LANGS, RunLangOutput};
 use serde::Serialize;
-use sqlx::PgPool;
+use sqlx::{query_scalar, PgPool};
 
 use crate::{
-    auto_output_format::{AutoInput, AutoOutputFormat, Format},
-    error::Error,
-    models::{
+    auto_output_format::{AutoInput, AutoOutputFormat, Format}, error::Error, models::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, NewSolution, Solution},
-    },
-    test_solution::test_solution,
+    }, slug::Slug, test_solution::test_solution
 };
 
 #[derive(Serialize)]
@@ -59,21 +56,40 @@ pub async fn all_solutions(
     ))
 }
 
-pub async fn get_solution(
-    Path((challenge_id, _language_name, solution_id)): Path<(i32, String, i32)>,
-    Extension(pool): Extension<PgPool>,
-) -> Result<Json<Solution>, ()> {
-    let sql =
-        "SELECT id, language, version, challenge, code FROM solutions WHERE id=$1 AND challenge=$2"
-            .to_string();
+pub async fn challenge_redirect(Path(id): Path<i32>, account: Option<Account>, pool: Extension<PgPool>) -> 
+Result<Redirect, Error> {
+    challenge_redirect_no_slug(Path((id, None)), account, pool).await
+}
 
-    let solution: Solution = sqlx::query_as(&sql)
-        .bind(solution_id)
-        .bind(challenge_id)
-        .fetch_one(&pool)
-        .await
-        .map_err(|_| ())?;
-    Ok(Json(solution))
+pub async fn challenge_redirect_with_slug(Path((id, _slug)): Path<(i32, String)>, account: Option<Account>, pool: Extension<PgPool>) -> 
+Result<Redirect, Error> {
+    challenge_redirect_no_slug(Path((id, None)), account, pool).await
+}
+
+#[axum::debug_handler]
+pub async fn challenge_redirect_no_slug(
+    Path((id, language)): Path<(i32, Option<String>)>, account: Option<Account>, Extension(pool): Extension<PgPool>) -> 
+Result<Redirect, Error> {
+    let language = match language.as_ref() {
+        Some(language) => language.as_str(),
+        None => {
+            match account.as_ref() {
+                Some(account) => account.preferred_language.as_str(),
+                None => "python"
+            }
+        }
+    };
+
+    let Some(slug) = query_scalar!(
+        "SELECT name FROM challenges WHERE id=$1",
+        id
+    ).fetch_optional(&pool).await.map_err(Error::DatabaseError)? else {
+        return Err(Error::NotFound)
+    };
+
+    return Ok(Redirect::permanent(&format!(
+        "/challenge/{id}/{}/solve/{language}"
+    , Slug(&slug))))
 }
 
 pub async fn new_solution(

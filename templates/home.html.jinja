@@ -40,13 +40,11 @@
       <ul>
         {% for challenge in object.challenges %}
           <li>
-            <a href="/{{ challenge.id }}/python">{{ challenge.challenge.name }}</a>
+            <a href="/challenge/{{ challenge.id }}/{{ challenge.challenge.name | slugify }}/solve">{{ challenge.challenge.name }}</a>
           </li>
         {% endfor %}
       </ul>
-      {% if account %}
-        <a href="/challenge">New Challenge</a>
-      {% endif %}
+      {% if account %}<a href="/challenge">New Challenge</a>{% endif %}
     </div>
   </div>
 {% endblock content %}

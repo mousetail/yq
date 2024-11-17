@@ -228,6 +228,7 @@ async fn insert_user(
             id: new_user_id.0,
             username: github_user.login.clone(),
             avatar: github_user.avatar_url.clone(),
+            preferred_language: "python".to_owned(),
         }));
 
         Ok(())

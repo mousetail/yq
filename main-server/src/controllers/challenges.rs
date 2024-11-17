@@ -16,6 +16,7 @@ use crate::{
         account::Account,
         challenge::{Challenge, ChallengeWithAuthorInfo, NewChallenge, NewChallengeWithTests},
     },
+    slug::Slug,
     solution_invalidation::notify_challenge_updated,
     test_solution::test_solution,
 };
@@ -64,6 +65,24 @@ pub async fn compose_challenge(
     ))
 }
 
+pub async fn view_challenge(
+    Path(id): Path<i32>,
+    pool: Extension<PgPool>,
+    format: Format,
+) -> Result<AutoOutputFormat<NewChallenge>, Error> {
+    Ok(AutoOutputFormat::new(
+        match ChallengeWithAuthorInfo::get_by_id(&pool, id)
+            .await?
+            .map(|d| d.challenge)
+        {
+            Some(m) => m.challenge,
+            None => return Err(Error::NotFound),
+        },
+        "view_challenge.html.jinja",
+        format,
+    ))
+}
+
 pub async fn new_challenge(
     id: Option<Path<i32>>,
     Extension(pool): Extension<PgPool>,
@@ -105,9 +124,12 @@ pub async fn new_challenge(
                 .await
                 .map_err(Error::DatabaseError)?;
 
+            let redirect =
+                Redirect::temporary(&format!("/challenge/{row}/{}/edit", Slug(&challenge.name)))
+                    .into_response();
             tokio::spawn(post_new_challenge(account, challenge, row));
 
-            Ok(Redirect::temporary(&format!("/challenge/{row}")).into_response())
+            Ok(redirect)
         }
         Some(Path(id)) => {
             sqlx::query!(

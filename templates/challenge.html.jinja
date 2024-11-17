@@ -9,7 +9,7 @@
          alt="{{ object.challenge.author_name }} avatar"
          height="18" />
     {{ object.challenge.author_name }}
-    <a href="/challenge/{{ object.challenge.id }}">Edit</a>
+    <a href="/challenge/{{ object.challenge.id }}/{{ object.challenge.challenge.name | slugify }}/edit">Edit</a>
   </p>
   <div class="two-column-description">
     <div>

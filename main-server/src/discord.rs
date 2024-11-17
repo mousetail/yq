@@ -3,7 +3,10 @@ use std::env::VarError;
 use reqwest::StatusCode;
 use serde::Serialize;
 
-use crate::models::{account::Account, challenge::NewChallenge};
+use crate::{
+    models::{account::Account, challenge::NewChallenge},
+    slug::Slug,
+};
 
 #[derive(Serialize)]
 pub struct WebHookRequest<'a> {
@@ -65,7 +68,10 @@ pub async fn post_new_challenge(account: Account, challenge: NewChallenge, row: 
         embeds: Some(vec![Embed {
             title: Some(&format!("New Challenge: {}", challenge.name)),
             description: Some(&challenge.description[..100.min(challenge.description.len())]),
-            url: Some(&format!("https://byte-heist.com/{row}/python")),
+            url: Some(&format!(
+                "https://byte-heist.com/challenge/{row}/{}/solve",
+                Slug(&challenge.name)
+            )),
             color: Some(255),
         }]),
     })

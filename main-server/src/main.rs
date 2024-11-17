@@ -4,6 +4,7 @@ mod discord;
 mod error;
 mod markdown;
 mod models;
+mod slug;
 mod solution_invalidation;
 mod test_solution;
 mod vite;
@@ -13,8 +14,11 @@ use axum::{routing::get, Extension, Router};
 use anyhow::Context;
 use controllers::{
     auth::{github_callback, github_login},
-    challenges::{all_challenges, compose_challenge, new_challenge},
-    solution::{all_solutions, get_solution, new_solution},
+    challenges::{all_challenges, compose_challenge, new_challenge, view_challenge},
+    solution::{
+        all_solutions, challenge_redirect, challenge_redirect_no_slug,
+        challenge_redirect_with_slug, new_solution,
+    },
     user::get_user,
 };
 use solution_invalidation::solution_invalidation_task;
@@ -72,12 +76,24 @@ async fn main() -> anyhow::Result<()> {
         .nest_service("/robots.txt", ServeFile::new("static/robots.txt"))
         .nest_service("/favicon.ico", ServeFile::new("static/favicon.svg"))
         .route("/challenge", get(compose_challenge).post(new_challenge))
-        .route("/challenge/:id", get(compose_challenge).post(new_challenge))
+        .route("/challenge/:id", get(challenge_redirect))
+        .route(
+            "/challenge/:id/:slug/edit",
+            get(compose_challenge).post(new_challenge),
+        )
+        .route("/challenge/:id/:slug/view", get(view_challenge))
+        .route(
+            "/challenge/:id/:slug/solve",
+            get(challenge_redirect_with_slug),
+        )
+        .route(
+            "/challenge/:id/:slug/solve/:language",
+            get(all_solutions).post(new_solution),
+        )
         .route("/login/github", get(github_login))
         .route("/callback/github", get(github_callback))
         .route("/user/:id", get(get_user))
-        .route("/:id/:language", get(all_solutions).post(new_solution))
-        .route("/:id/:language/:solution_id", get(get_solution))
+        .route("/:id/:language", get(challenge_redirect_no_slug))
         .nest_service("/static", ServeDir::new("static"))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
