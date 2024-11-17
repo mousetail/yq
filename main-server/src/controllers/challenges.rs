@@ -45,13 +45,13 @@ pub async fn all_challenges(
 
 #[axum::debug_handler]
 pub async fn compose_challenge(
-    id: Option<Path<i32>>,
+    id: Option<Path<(i32, String)>>,
     pool: Extension<PgPool>,
     format: Format,
 ) -> Result<AutoOutputFormat<NewChallenge>, Error> {
     Ok(AutoOutputFormat::new(
         match id {
-            Some(Path(id)) => match ChallengeWithAuthorInfo::get_by_id(&pool, id)
+            Some(Path((id, _slug))) => match ChallengeWithAuthorInfo::get_by_id(&pool, id)
                 .await?
                 .map(|d| d.challenge)
             {
@@ -66,7 +66,7 @@ pub async fn compose_challenge(
 }
 
 pub async fn view_challenge(
-    Path(id): Path<i32>,
+    Path((id, _slug)): Path<(i32, String)>,
     pool: Extension<PgPool>,
     format: Format,
 ) -> Result<AutoOutputFormat<NewChallenge>, Error> {
