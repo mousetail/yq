@@ -84,7 +84,7 @@ pub async fn view_challenge(
 }
 
 pub async fn new_challenge(
-    id: Option<Path<i32>>,
+    id: Option<Path<(i32, String)>>,
     Extension(pool): Extension<PgPool>,
     account: Account,
     format: Format,
@@ -131,7 +131,7 @@ pub async fn new_challenge(
 
             Ok(redirect)
         }
-        Some(Path(id)) => {
+        Some(Path((id, _slug))) => {
             sqlx::query!(
                 r"UPDATE challenges SET name=$1, judge=$2, description=$3, example_code=$4 WHERE id=$5",
                 challenge.name,

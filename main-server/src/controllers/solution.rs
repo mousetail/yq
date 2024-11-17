@@ -21,7 +21,7 @@ pub struct AllSolutionsOutput {
 }
 
 pub async fn all_solutions(
-    Path((challenge_id, language_name)): Path<(i32, String)>,
+    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
     format: Format,
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
@@ -93,7 +93,7 @@ Result<Redirect, Error> {
 }
 
 pub async fn new_solution(
-    Path((challenge_id, language_name)): Path<(i32, String)>,
+    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
     account: Account,
     Extension(pool): Extension<PgPool>,
     format: Format,
