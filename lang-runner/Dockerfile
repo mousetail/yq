@@ -6,7 +6,7 @@ COPY . .
 RUN ls
 RUN cargo build --package lang-runner --release
 
-FROM debian:12
+FROM ubuntu:25.04
 
 # Install asdf dependencies
 RUN apt-get update -y && apt-get install -y \

@@ -33,7 +33,7 @@ ts-build-runner:
 .PHONY: restart-runner
 restart-runner:
 	cargo build --package lang-runner
-	docker container kill --signal USR1 yet-to-be-named-golfing-site-yq-runner-1
+	docker container kill --signal USR1 byte-heist-yq-runner-1
 
 .PHONY: production-build
 production-build:

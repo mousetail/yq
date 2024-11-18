@@ -104,9 +104,9 @@ async fn run_lang(
     command
         .args([
             "--die-with-parent",
-            "--ro-bind",
-            "/proc/self",
-            "/proc/self",
+            // "--ro-bind",
+            // "/proc/self",
+            // "/proc/self",
             "--ro-bind",
             "/bin",
             "/bin",
@@ -220,8 +220,10 @@ pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<RunLangOutput, RunLangError> {
+    let deno_latest_version = LANGS.iter().find(|k|k.name == "deno").unwrap().latest_version;
+
     // Runner Lang
-    install_lang("deno".to_owned(), "2.0.4", lang_versions)
+    install_lang("deno".to_owned(), &deno_latest_version, lang_versions)
         .await
         .map_err(RunLangError::PluginInstallFailure)?;
 
@@ -239,7 +241,7 @@ pub async fn process_message(
         &message.code,
         &message.judge,
         "deno",
-        "2.0.4",
+        &deno_latest_version,
     )
     .await
     .map_err(RunLangError::RunLangError)?;

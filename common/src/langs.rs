@@ -33,7 +33,7 @@ pub const LANGS: &[Lang] = &[
             ("NO_COLOR", "1")
         ],
         install_env: &[],
-        latest_version: "2.0.4",
+        latest_version: "2.0.6",
     },
     Lang {
         name: "python",
