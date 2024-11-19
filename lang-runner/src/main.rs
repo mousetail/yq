@@ -33,6 +33,7 @@ async fn main() {
     let app = Router::new()
         // `GET /` goes to `root`
         .route("/", get(root).post(handle_message))
+        .route("/lang-versions", get(lang_versions_endpoint))
         .with_state(Arc::new(lang_versions));
 
     // run our app with hyper, listening globally on port 3000
@@ -47,6 +48,11 @@ async fn main() {
 
 async fn root() -> &'static str {
     "Server is working properly"
+}
+
+async fn lang_versions_endpoint(
+    State(lang_versions): State<Arc<CacheMap<String, CacheMap<String, ()>>>>) -> Json<impl Serialize> {
+        return Json(serde_json::to_value(&*lang_versions).unwrap());
 }
 
 #[axum::debug_handler]

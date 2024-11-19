@@ -49,18 +49,10 @@ pub async fn parse_judge_result_from_stream(mut stream: impl AsyncReadExt + Unpi
     let mut line_buffer = vec![];
     loop {
         let mut buffer = [0; 512];
-        println!("About to request more data");
         let value = stream.read(&mut buffer).await.unwrap();
         if value == 0 {
             break;
         }
-        println!(
-            "Received {value} data from remote: {}",
-            buffer[..20]
-                .iter()
-                .map(|&k| k as char)
-                .collect::<String>()
-        );
 
         let mut part = &buffer[..value];
         while let Some(i) = part.iter().position(|&d| d == b'\n') {
@@ -73,6 +65,5 @@ pub async fn parse_judge_result_from_stream(mut stream: impl AsyncReadExt + Unpi
         }
         line_buffer.extend_from_slice(part);
     }
-    eprintln!("Output Stream Closed");
     judge_result
 }
