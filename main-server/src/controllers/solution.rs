@@ -1,7 +1,7 @@
 use axum::{extract::Path, http::StatusCode, response::Redirect, Extension};
 use common::{langs::LANGS, RunLangOutput};
 use serde::Serialize;
-use sqlx::{query_scalar, PgPool};
+use sqlx::{query_scalar, types::time::OffsetDateTime, PgPool};
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format}, error::Error, models::{
@@ -66,7 +66,6 @@ Result<Redirect, Error> {
     challenge_redirect_no_slug(Path((id, None)), account, pool).await
 }
 
-#[axum::debug_handler]
 pub async fn challenge_redirect_no_slug(
     Path((id, language)): Path<(i32, Option<String>)>, account: Option<Account>, Extension(pool): Extension<PgPool>) -> 
 Result<Redirect, Error> {
@@ -88,8 +87,9 @@ Result<Redirect, Error> {
     };
 
     return Ok(Redirect::permanent(&format!(
-        "/challenge/{id}/{}/solve/{language}"
-    , Slug(&slug))))
+        "/challenge/{id}/{}/solve/{language}",
+        Slug(&slug)))
+    )
 }
 
 pub async fn new_solution(
@@ -126,13 +126,14 @@ pub async fn new_solution(
         match previous_code {
             None => {
                 sqlx::query!(
-                    "INSERT INTO solutions (language, version, challenge, code, author, score) values ($1, $2, $3, $4, $5, $6)",
+                    "INSERT INTO solutions (language, version, challenge, code, author, score, last_improved_date) values ($1, $2, $3, $4, $5, $6, $7)",
                     language_name,
                     version,
                     challenge_id,
                     solution.code,
                     account.id,
                     solution.code.len() as i32,
+                    OffsetDateTime::now_utc()
                 )
                 .execute(&pool)
                 .await
@@ -150,10 +151,18 @@ pub async fn new_solution(
                         code=$1,
                         score=$2,
                         valid=true,
-                        validated_at=now()
-                    WHERE id=$3",
+                        validated_at=now(),
+                        last_improved_date=$3
+                    WHERE id=$4",
                     solution.code,
                     solution.code.len() as i32,
+                    if
+                        (solution.code.len() as i32) < w.score
+                    {
+                        OffsetDateTime::now_utc()
+                    } else {
+                        w.last_improved_date
+                    },
                     w.id
                 )
                 .execute(&pool)

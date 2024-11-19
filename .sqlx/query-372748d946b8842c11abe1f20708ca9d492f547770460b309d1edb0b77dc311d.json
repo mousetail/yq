@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT solutions.language, solutions.score, solutions.challenge as challenge_id, challenges.name as challenge_name\n        FROM solutions\n        LEFT JOIN challenges ON challenges.id = solutions.challenge\n        WHERE solutions.author=$1",
+  "query": "SELECT solutions.language, solutions.score, solutions.challenge as challenge_id, challenges.name as challenge_name\n        FROM solutions\n        LEFT JOIN challenges ON challenges.id = solutions.challenge\n        WHERE solutions.author=$1\n        AND solutions.valid=true",
   "describe": {
     "columns": [
       {
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "c440feaec0653840476c56e28acded4d3540220070ade02568daea364d844b58"
+  "hash": "372748d946b8842c11abe1f20708ca9d492f547770460b309d1edb0b77dc311d"
 }

@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
+use tower_sessions::cookie::time::OffsetDateTime;
 
 #[derive(sqlx::FromRow, Deserialize, Serialize)]
 pub struct NewSolution {
@@ -24,6 +25,7 @@ pub struct Code {
     pub score: i32,
     pub id: i32,
     pub valid: bool,
+    pub last_improved_date: OffsetDateTime
 }
 
 impl Code {
@@ -36,7 +38,7 @@ impl Code {
         sqlx::query_as!(
             Code,
             r#"
-                SELECT code, score, id, valid from solutions
+                SELECT code, score, id, valid, last_improved_date from solutions
                 WHERE author=$1 AND challenge=$2 AND language=$3
                 ORDER BY score ASC
                 LIMIT 1
@@ -77,7 +79,7 @@ impl LeaderboardEntry {
                 score FROM solutions
             LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
-            ORDER BY solutions.score ASC
+            ORDER BY solutions.score ASC, last_improved_date ASC
             ",
             challenge_id,
             language

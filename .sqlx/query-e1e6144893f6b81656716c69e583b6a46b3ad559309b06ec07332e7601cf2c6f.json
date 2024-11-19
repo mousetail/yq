@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n                solutions.id as id,\n                solutions.author as author_id,\n                accounts.username as author_name,\n                accounts.avatar as author_avatar,\n                score FROM solutions\n            LEFT JOIN accounts ON solutions.author = accounts.id\n            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true\n            ORDER BY solutions.score ASC\n            ",
+  "query": "\n            SELECT\n                solutions.id as id,\n                solutions.author as author_id,\n                accounts.username as author_name,\n                accounts.avatar as author_avatar,\n                score FROM solutions\n            LEFT JOIN accounts ON solutions.author = accounts.id\n            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true\n            ORDER BY solutions.score ASC, last_improved_date ASC\n            ",
   "describe": {
     "columns": [
       {
@@ -43,5 +43,5 @@
       false
     ]
   },
-  "hash": "7c11bcfe9391b88b99b866c58d17240c7523917763df64806fafdd7bbd16e1b8"
+  "hash": "e1e6144893f6b81656716c69e583b6a46b3ad559309b06ec07332e7601cf2c6f"
 }

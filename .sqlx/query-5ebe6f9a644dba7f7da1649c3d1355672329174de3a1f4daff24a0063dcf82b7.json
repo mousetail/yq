@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT code, score, id, valid from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY score ASC\n                LIMIT 1\n            ",
+  "query": "\n                SELECT code, score, id, valid, last_improved_date from solutions\n                WHERE author=$1 AND challenge=$2 AND language=$3\n                ORDER BY score ASC\n                LIMIT 1\n            ",
   "describe": {
     "columns": [
       {
@@ -22,6 +22,11 @@
         "ordinal": 3,
         "name": "valid",
         "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_improved_date",
+        "type_info": "Timestamptz"
       }
     ],
     "parameters": {
@@ -35,8 +40,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "9662f69e3f5e464115eb23088ed23cbb6880d3be28d52ddf0b27e0e8d676d867"
+  "hash": "5ebe6f9a644dba7f7da1649c3d1355672329174de3a1f4daff24a0063dcf82b7"
 }

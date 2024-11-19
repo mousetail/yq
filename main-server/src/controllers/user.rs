@@ -39,7 +39,8 @@ pub async fn get_user(
         "SELECT solutions.language, solutions.score, solutions.challenge as challenge_id, challenges.name as challenge_name
         FROM solutions
         LEFT JOIN challenges ON challenges.id = solutions.challenge
-        WHERE solutions.author=$1",
+        WHERE solutions.author=$1
+        AND solutions.valid=true",
         id
     ).fetch_all(&pool).await
     .map_err(Error::DatabaseError)?;
