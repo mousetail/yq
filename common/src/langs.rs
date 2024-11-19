@@ -64,6 +64,7 @@ pub const LANGS: &[Lang] = &[
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/vyxal", "${FILE_LOCATION}"],
         plugin: "https://github.com/lyxal/vyxasdf.git",
+        env: &[],
         install_env: &[],
         latest_version: "2.22.0",
     },
