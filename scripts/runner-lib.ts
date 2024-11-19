@@ -41,6 +41,10 @@ export type RunCodeResult = {
     exitStatus: number
 }
 
+export interface RunCompiledCodeResult extends RunCodeResult {
+    compilationResult: RunCodeResult | undefined
+}
+
 export class StringResult {
     protected code: Code
     public text: string
@@ -88,12 +92,12 @@ export class RunResult extends StringResult {
 
 export class Code {
     public code: string;
-    private onRunCallback: (code: string, input: string | undefined) => Promise<RunCodeResult>;
+    private onRunCallback: (code: string, input: string | undefined) => Promise<RunCompiledCodeResult>;
     public testCases: TestCase[];
 
     private runs: number = 0;
 
-    constructor(code: string, onRunCallback: (code: string, input: string | undefined) => Promise<RunCodeResult>) {
+    constructor(code: string, onRunCallback: (code: string, input: string | undefined) => Promise<RunCompiledCodeResult>) {
         this.code = code;
         this.onRunCallback = onRunCallback;
         this.testCases = [];
@@ -105,13 +109,23 @@ export class Code {
 
     async runCode(code: string, input?: string | undefined) {
         const result = await this.onRunCallback(code, input);
-        const runDisplay: TestCase = new TestCase(`Run #${++this.runs}`, 'Info', {
-            "Run": {
-                "input": input,
-                "output": result.stdout,
-                "error": result.stderr
+        let {stderr, stdout, compilationResult} = result;
+        const compilationFailed = compilationResult && compilationResult.exitStatus !== 0;
+        if (compilationFailed) {
+            stdout = compilationResult.stdout;
+            stderr = compilationResult.stderr;
+        }
+        const runDisplay: TestCase = new TestCase(
+            `Run #${++this.runs}`,
+            compilationFailed ? 'Warning' : 'Info',
+            {
+                "Run": {
+                    "input": input,
+                    "output": stdout,
+                    "error": stderr,
+                }
             }
-        })
+        )
         console.log(JSON.stringify(runDisplay));
         return new RunResult(this, result);
     }

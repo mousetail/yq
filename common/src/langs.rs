@@ -46,8 +46,8 @@ pub const LANGS: &[Lang] = &[
     },
     Lang {
         name: "rust",
-        compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "/tmp/output"],
-        run_command: &["/tmp/output"],
+        compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}"],
+        run_command: &["${OUTPUT_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-rust.git",
         env: &[
             ("LD_LIBRARY_PATH", "/lang/lib:/lib"),
