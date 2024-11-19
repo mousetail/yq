@@ -117,7 +117,7 @@ export class Code {
         }
         const runDisplay: TestCase = new TestCase(
             `Run #${++this.runs}`,
-            compilationFailed ? 'Fail' : 'Info',
+            compilationFailed ? 'Warning' : 'Info',
             {
                 "Run": {
                     "input": input,
