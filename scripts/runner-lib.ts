@@ -42,7 +42,7 @@ export type RunCodeResult = {
 }
 
 export interface RunCompiledCodeResult extends RunCodeResult {
-    compilationResult: RunCodeResult | null
+    compilationResult: RunCodeResult | undefined
 }
 
 export class StringResult {

@@ -57,7 +57,7 @@ const compile_and_run_program = (() => {
     })
 
     return async (lang: Lang, code: string, input: string): Promise<RunCompiledCodeResult> => {
-        let compilationResult: RunCodeResult | null = null;
+        let compilationResult: RunCodeResult | undefined;
 
         if (!Object.hasOwn(compiled_programs, code) && lang.compileCommand.length > 0) {
             const codeIndex = Object.keys(compiled_programs).length
