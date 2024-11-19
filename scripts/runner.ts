@@ -2,7 +2,7 @@ import { argv, stdin } from 'node:process';
 import { writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { Code, FinalVerdict, RunCodeResult, TestCase } from './runner-lib.ts';
+import { Code, FinalVerdict, RunCodeResult, RunCompiledCodeResult, TestCase } from './runner-lib.ts';
 
 type Lang = {
     name: string,
@@ -48,36 +48,49 @@ const run = async (args: string[], env: [string, string][], input: string): Prom
 }
 
 const compile_and_run_program = (() => {
-    const compiled_programs = {};
+    const compiled_programs: Record<string, string> = {};
 
-    const replaceTokens = ar => ar.map((e) => {
+    const replaceTokens = (ar: string[], outputLocation: string) => ar.map((e) => {
         return e.replace(/\$\{LANG_LOCATION\}/ug, '/lang')
-            .replace(/\$\{FILE_LOCATION\}/ug, '/tmp/code');
+            .replace(/\$\{FILE_LOCATION\}/ug, '/tmp/code')
+            .replace(/\$\{OUTPUT_LOCATION\}/ug, outputLocation);
     })
 
-    return async (lang: Lang, code: string, input: string) => {
-        let [combined_stdout, combined_stderr] = ["", ""];
-        if (!Object.prototype.hasOwnProperty.call(compiled_programs, code) && lang.compileCommand.length > 0) {
-            const { stdout, stderr, exitStatus } = await run(
-                replaceTokens(lang.compileCommand),
+    return async (lang: Lang, code: string, input: string): Promise<RunCompiledCodeResult> => {
+        let compilationResult: RunCodeResult | null = null;
+
+        if (!Object.hasOwn(compiled_programs, code) && lang.compileCommand.length > 0) {
+            const codeIndex = Object.keys(compiled_programs).length
+            const outputLocation = `/tmp/executable${codeIndex}`;
+            compiled_programs[code] = outputLocation;
+            compilationResult = await run(
+                replaceTokens(lang.compileCommand, outputLocation),
                 lang.env,
                 ""
             )
-            compiled_programs[code] = true;
-            combined_stdout += stdout;
-            combined_stderr += stderr;
+            if (compilationResult.exitStatus !== 0) {
+                return {
+                    compilationResult,
+                    stdout: "",
+                    stderr: "",
+                    exitStatus: 1
+                }
+            }
         }
 
+        const outputLocation = Object.hasOwn(compiled_programs, code) ? compiled_programs[code] : '/tmp/output';
+
         const { stdout, stderr, exitStatus } = await run(
-            replaceTokens(lang.runCommand),
+            replaceTokens(lang.runCommand, outputLocation),
             lang.env,
             input
         );
 
         return {
-            stdout: combined_stdout + stdout,
-            stderr: combined_stderr + stderr,
-            exitStatus
+            stdout,
+            stderr,
+            exitStatus,
+            compilationResult,
         }
     }
 })();
@@ -91,7 +104,7 @@ const compile_and_run_program = (() => {
         ))
     ).default as ((code: Code) => AsyncGenerator<TestCase, FinalVerdict, undefined>);
 
-    const on_run_callback = async (program: string, input?: string | undefined): Promise<RunCodeResult> => {
+    const on_run_callback = async (program: string, input?: string | undefined): Promise<RunCompiledCodeResult> => {
         writeFile('/tmp/code', program);
         return await compile_and_run_program(
             lang,
