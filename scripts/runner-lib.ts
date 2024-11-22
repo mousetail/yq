@@ -151,3 +151,18 @@ export const eqIgnoreTrailingWhitespace = (a: string, b: string): boolean => {
     )
     return a_stripped == b_stripped
 }
+
+export function range(a: number, b?: number): number[] {
+    return b === undefined ? [...Array(a).keys()] : range(b - a).map(x => x + a);
+}
+
+export function rand(a: number, b?: number): number {
+    return b === undefined ? Math.floor(Math.random() * a) : rand(b - a) + a;
+}
+
+export function shuffle(array: unknown[]): void {
+    for (let i = array.length - 1; i >= 0; i--) {
+        const j = rand(i + 1);
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
