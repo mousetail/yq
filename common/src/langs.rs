@@ -68,4 +68,13 @@ pub const LANGS: &[Lang] = &[
         install_env: &[],
         latest_version: "2.22.2",
     },
+    Lang {
+        name: "tinyapl",
+        compile_command: &[],
+        run_command: &["${LANG_LOCATION}/bin/tinyapl", "${FILE_LOCATION}"],
+        plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
+        env: &[],
+        install_env: &[],
+        latest_version: "0.10.0.1",
+    },
 ];
