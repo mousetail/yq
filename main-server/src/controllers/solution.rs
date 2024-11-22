@@ -4,11 +4,15 @@ use serde::Serialize;
 use sqlx::{query_scalar, types::time::OffsetDateTime, PgPool};
 
 use crate::{
-    auto_output_format::{AutoInput, AutoOutputFormat, Format}, error::Error, models::{
+    auto_output_format::{AutoInput, AutoOutputFormat, Format},
+    error::Error,
+    models::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
         solutions::{Code, LeaderboardEntry, NewSolution},
-    }, slug::Slug, test_solution::test_solution
+    },
+    slug::Slug,
+    test_solution::test_solution,
 };
 
 #[derive(Serialize)]
@@ -17,7 +21,7 @@ pub struct AllSolutionsOutput {
     leaderboard: Vec<LeaderboardEntry>,
     tests: Option<RunLangOutput>,
     code: Option<String>,
-    previous_solution_invalid: bool
+    previous_solution_invalid: bool,
 }
 
 pub async fn all_solutions(
@@ -48,7 +52,7 @@ pub async fn all_solutions(
             challenge,
             leaderboard,
             tests: None,
-            previous_solution_invalid: code.as_ref().is_some_and(|e|!e.valid),
+            previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
             code: code.map(|d| d.code),
         },
         "challenge.html.jinja",
@@ -56,40 +60,47 @@ pub async fn all_solutions(
     ))
 }
 
-pub async fn challenge_redirect(Path(id): Path<i32>, account: Option<Account>, pool: Extension<PgPool>) -> 
-Result<Redirect, Error> {
+pub async fn challenge_redirect(
+    Path(id): Path<i32>,
+    account: Option<Account>,
+    pool: Extension<PgPool>,
+) -> Result<Redirect, Error> {
     challenge_redirect_no_slug(Path((id, None)), account, pool).await
 }
 
-pub async fn challenge_redirect_with_slug(Path((id, _slug)): Path<(i32, String)>, account: Option<Account>, pool: Extension<PgPool>) -> 
-Result<Redirect, Error> {
+pub async fn challenge_redirect_with_slug(
+    Path((id, _slug)): Path<(i32, String)>,
+    account: Option<Account>,
+    pool: Extension<PgPool>,
+) -> Result<Redirect, Error> {
     challenge_redirect_no_slug(Path((id, None)), account, pool).await
 }
 
 pub async fn challenge_redirect_no_slug(
-    Path((id, language)): Path<(i32, Option<String>)>, account: Option<Account>, Extension(pool): Extension<PgPool>) -> 
-Result<Redirect, Error> {
+    Path((id, language)): Path<(i32, Option<String>)>,
+    account: Option<Account>,
+    Extension(pool): Extension<PgPool>,
+) -> Result<Redirect, Error> {
     let language = match language.as_ref() {
         Some(language) => language.as_str(),
-        None => {
-            match account.as_ref() {
-                Some(account) => account.preferred_language.as_str(),
-                None => "python"
-            }
-        }
+        None => match account.as_ref() {
+            Some(account) => account.preferred_language.as_str(),
+            None => "python",
+        },
     };
 
-    let Some(slug) = query_scalar!(
-        "SELECT name FROM challenges WHERE id=$1",
-        id
-    ).fetch_optional(&pool).await.map_err(Error::DatabaseError)? else {
-        return Err(Error::NotFound)
+    let Some(slug) = query_scalar!("SELECT name FROM challenges WHERE id=$1", id)
+        .fetch_optional(&pool)
+        .await
+        .map_err(Error::DatabaseError)?
+    else {
+        return Err(Error::NotFound);
     };
 
     return Ok(Redirect::permanent(&format!(
         "/challenge/{id}/{}/solve/{language}",
-        Slug(&slug)))
-    )
+        Slug(&slug)
+    )));
 }
 
 pub async fn new_solution(
@@ -120,9 +131,16 @@ pub async fn new_solution(
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 
-    let previous_solution_invalid = previous_code.as_ref().is_some_and(|e|!e.valid);
+    let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
 
     let status = if test_result.tests.pass {
+        // Currently the web browser turns all line breaks into "\r\n" when a solution
+        // is submitted. This should eventually be fixed in the frontend, but for now
+        // we just replace "\r\n" with "\n" when calculating the score to make it match
+        // the byte counter in the editor.
+        // Related: https://github.com/mousetail/Byte-Heist/issues/34
+        let new_score = (solution.code.len() - solution.code.matches("\r\n").count()) as i32;
+
         match previous_code {
             None => {
                 sqlx::query!(
@@ -132,7 +150,7 @@ pub async fn new_solution(
                     challenge_id,
                     solution.code,
                     account.id,
-                    solution.code.len() as i32,
+                    new_score,
                     OffsetDateTime::now_utc()
                 )
                 .execute(&pool)
@@ -141,11 +159,11 @@ pub async fn new_solution(
 
                 StatusCode::CREATED
             }
-            Some(w) if 
+            Some(w) if
                 // Always replace an invalid solution
                 !w.valid
                 // Replace a solution if the score is better
-                || w.score >= solution.code.len() as i32 => {
+                || w.score >= new_score => {
                 sqlx::query!(
                     "UPDATE solutions SET 
                         code=$1,
@@ -155,10 +173,8 @@ pub async fn new_solution(
                         last_improved_date=$3
                     WHERE id=$4",
                     solution.code,
-                    solution.code.len() as i32,
-                    if
-                        (solution.code.len() as i32) < w.score
-                    {
+                    new_score,
+                    if new_score < w.score {
                         OffsetDateTime::now_utc()
                     } else {
                         w.last_improved_date
@@ -187,7 +203,7 @@ pub async fn new_solution(
             .await,
             tests: Some(test_result),
             code: Some(solution.code),
-            previous_solution_invalid
+            previous_solution_invalid,
         },
         "challenge.html.jinja",
         format,

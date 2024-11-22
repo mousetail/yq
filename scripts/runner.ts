@@ -62,13 +62,14 @@ const compile_and_run_program = (() => {
         if (!Object.hasOwn(compiled_programs, code) && lang.compileCommand.length > 0) {
             const codeIndex = Object.keys(compiled_programs).length
             const outputLocation = `/tmp/executable${codeIndex}`;
-            compiled_programs[code] = outputLocation;
             compilationResult = await run(
                 replaceTokens(lang.compileCommand, outputLocation),
                 lang.env,
                 ""
             )
-            if (compilationResult.exitStatus !== 0) {
+            if (compilationResult.exitStatus === 0) {
+                compiled_programs[code] = outputLocation;
+            } else {
                 return {
                     compilationResult,
                     stdout: "",

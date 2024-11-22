@@ -56,19 +56,16 @@ const setupEditorControls = (editorControls: HTMLElement, mainTextArea: EditorVi
     const resetButton = editorControls.querySelector('#restore-solution-button')!;
     const textEncoder = new TextEncoder();
     const originalText = mainTextArea.state.doc.toString();
+    const lengthInBytes = (s: string): number => textEncoder.encode(s).length
 
-    byteCountElement.textContent = '' + textEncoder.encode(originalText).length;
+    byteCountElement.textContent = lengthInBytes(originalText).toString();
 
     mainTextArea.dispatch(
         {
             effects: StateEffect.appendConfig.of([
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged) {
-                        byteCountElement.textContent = '' +
-                            [...mainTextArea.state.doc.iterLines()].reduce(
-                                (a, b) => a + textEncoder.encode(b).length + 1,
-                                0
-                            );
+                        byteCountElement.textContent = lengthInBytes(mainTextArea.state.doc.toString()).toString();
                     }
                 })
             ])

@@ -14,7 +14,9 @@ use crate::{
     error::Error,
     models::{
         account::Account,
-        challenge::{Challenge, ChallengeWithAuthorInfo, NewChallenge, NewChallengeWithTests},
+        challenge::{
+            self, Challenge, ChallengeWithAuthorInfo, NewChallenge, NewChallengeWithTests,
+        },
     },
     slug::Slug,
     solution_invalidation::notify_challenge_updated,
@@ -43,22 +45,25 @@ pub async fn all_challenges(
     ))
 }
 
-#[axum::debug_handler]
 pub async fn compose_challenge(
     id: Option<Path<(i32, String)>>,
     pool: Extension<PgPool>,
     format: Format,
-) -> Result<AutoOutputFormat<NewChallenge>, Error> {
+) -> Result<AutoOutputFormat<NewChallengeWithTests>, Error> {
     Ok(AutoOutputFormat::new(
-        match id {
-            Some(Path((id, _slug))) => match ChallengeWithAuthorInfo::get_by_id(&pool, id)
-                .await?
-                .map(|d| d.challenge)
-            {
-                Some(m) => m.challenge,
-                None => return Err(Error::NotFound),
+        NewChallengeWithTests {
+            challenge: match &id {
+                Some(Path((id, _slug))) => match ChallengeWithAuthorInfo::get_by_id(&pool, *id)
+                    .await?
+                    .map(|d| d.challenge)
+                {
+                    Some(m) => m.challenge,
+                    None => return Err(Error::NotFound),
+                },
+                None => NewChallenge::default(),
             },
-            None => NewChallenge::default(),
+            tests: None,
+            id: id.map(|i| i.0 .0),
         },
         "submit_challenge.html.jinja",
         format,
@@ -69,13 +74,17 @@ pub async fn view_challenge(
     Path((id, _slug)): Path<(i32, String)>,
     pool: Extension<PgPool>,
     format: Format,
-) -> Result<AutoOutputFormat<NewChallenge>, Error> {
+) -> Result<AutoOutputFormat<NewChallengeWithTests>, Error> {
     Ok(AutoOutputFormat::new(
         match ChallengeWithAuthorInfo::get_by_id(&pool, id)
             .await?
             .map(|d| d.challenge)
         {
-            Some(m) => m.challenge,
+            Some(m) => NewChallengeWithTests {
+                challenge: m.challenge,
+                tests: None,
+                id: Some(id),
+            },
             None => return Err(Error::NotFound),
         },
         "view_challenge.html.jinja",
@@ -97,7 +106,7 @@ pub async fn new_challenge(
         &challenge.judge,
     )
     .await
-    .inspect_err(|e|eprintln!("{:?}", e))
+    .inspect_err(|e| eprintln!("{:?}", e))
     .map_err(|_| Error::ServerError)?;
 
     if !tests.tests.pass {
@@ -105,6 +114,7 @@ pub async fn new_challenge(
             NewChallengeWithTests {
                 challenge,
                 tests: Some(tests),
+                id: id.map(|i| i.0 .0),
             },
             "submit_challenge.html.jinja",
             format,
@@ -152,6 +162,7 @@ pub async fn new_challenge(
                 NewChallengeWithTests {
                     challenge,
                     tests: Some(tests),
+                    id: Some(id),
                 },
                 "submit_challenge.html.jinja",
                 format,

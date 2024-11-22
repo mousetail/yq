@@ -37,12 +37,11 @@ impl<K: Hash + Eq, V> FromIterator<(K, V)> for CacheMap<K, V> {
 impl<K: Hash + Eq + ToString, V: Serialize> Serialize for CacheMap<K, V> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         let mut map_serializer = serializer.serialize_map(Some(self.inner.len()))?;
         for object in self.inner.iter() {
-        map_serializer.serialize_entry(
-            &object.key().to_string(), 
-            &object.value().get())?;
+            map_serializer.serialize_entry(&object.key().to_string(), &object.value().get())?;
         }
 
         map_serializer.end()

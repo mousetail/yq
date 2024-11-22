@@ -220,7 +220,11 @@ pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<RunLangOutput, RunLangError> {
-    let deno_latest_version = LANGS.iter().find(|k|k.name == "deno").unwrap().latest_version;
+    let deno_latest_version = LANGS
+        .iter()
+        .find(|k| k.name == "deno")
+        .unwrap()
+        .latest_version;
 
     // Runner Lang
     install_lang("deno".to_owned(), &deno_latest_version, lang_versions)

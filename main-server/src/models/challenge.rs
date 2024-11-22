@@ -39,6 +39,7 @@ pub struct NewChallengeWithTests {
     #[serde(flatten)]
     pub challenge: NewChallenge,
     pub tests: Option<RunLangOutput>,
+    pub id: Option<i32>,
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize)]
