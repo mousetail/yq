@@ -9,10 +9,10 @@ export class TestCase {
     pass: PassState;
     resultDisplay: ResultDisplay;
 
-    constructor(name: string | undefined, pass: PassState | boolean, resultDisplay: ResultDisplay | string) {
+    constructor(name: string | undefined, pass: PassState, resultDisplay: ResultDisplay) {
         this.name = name;
-        this.pass = pass === true ? 'Pass' : pass === false ? 'Fail' : pass;
-        this.resultDisplay = typeof resultDisplay === 'string' ? {Text: resultDisplay} : resultDisplay;
+        this.pass = pass;
+        this.resultDisplay = resultDisplay;
     }
 
     public setName(name: string): this {
