@@ -1,7 +1,4 @@
-use axum::{
-    http::request::Parts,
-    response::Redirect,
-};
+use axum::{http::request::Parts, response::Redirect};
 
 use crate::error::Error;
 

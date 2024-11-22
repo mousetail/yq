@@ -25,7 +25,7 @@ pub struct Code {
     pub score: i32,
     pub id: i32,
     pub valid: bool,
-    pub last_improved_date: OffsetDateTime
+    pub last_improved_date: OffsetDateTime,
 }
 
 impl Code {

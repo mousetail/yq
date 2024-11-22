@@ -51,8 +51,9 @@ async fn root() -> &'static str {
 }
 
 async fn lang_versions_endpoint(
-    State(lang_versions): State<Arc<CacheMap<String, CacheMap<String, ()>>>>) -> Json<impl Serialize> {
-        return Json(serde_json::to_value(&*lang_versions).unwrap());
+    State(lang_versions): State<Arc<CacheMap<String, CacheMap<String, ()>>>>,
+) -> Json<impl Serialize> {
+    return Json(serde_json::to_value(&*lang_versions).unwrap());
 }
 
 #[axum::debug_handler]

@@ -1,7 +1,9 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
+{% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% extends "base/base.html.jinja" %}
 
 {% block content %}
+  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.challenge.name) }}
   <h1>{{ object.challenge.challenge.name }}</h1>
   <p>
     A challenge by
@@ -9,9 +11,9 @@
          alt="{{ object.challenge.author_name }} avatar"
          height="18" />
     {{ object.challenge.author_name }}
-    <a href="/challenge/{{ object.challenge.id }}/{{ object.challenge.challenge.name | slugify }}/edit">Edit</a>
   </p>
   <div class="two-column-description">
+
     <div>
       <h3>Description</h3>
       {{ object.challenge.challenge.description | markdown }}
