@@ -19,15 +19,19 @@ pub struct Account {
     pub username: String,
     pub avatar: String,
     pub preferred_language: String,
+    pub admin: bool,
 }
 
 impl Account {
     pub async fn get_by_id(pool: &PgPool, id: i32) -> Option<Self> {
-        sqlx::query_as("SELECT id, username, avatar, preferred_language from accounts where id=$1")
-            .bind(id)
-            .fetch_optional(pool)
-            .await
-            .unwrap()
+        sqlx::query_as!(
+            Account,
+            "SELECT id, username, avatar, preferred_language, admin from accounts where id=$1",
+            id
+        )
+        .fetch_optional(pool)
+        .await
+        .unwrap()
     }
 }
 

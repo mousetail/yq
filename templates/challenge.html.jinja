@@ -3,7 +3,7 @@
 {% extends "base/base.html.jinja" %}
 
 {% block content %}
-  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.challenge.name) }}
+  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.challenge.name, author=object.challenge.author) }}
   <h1>{{ object.challenge.challenge.name }}</h1>
   <p>
     A challenge by
