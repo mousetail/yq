@@ -150,7 +150,7 @@ pub async fn new_challenge(
         Some(Path((id, _slug))) => {
             let existing_challenge = existing_challenge.unwrap(); // This can never fail
 
-            if (!account.admin && existing_challenge.challenge.author != account.id) {
+            if !account.admin && existing_challenge.challenge.author != account.id {
                 return Err(Error::PermissionDenied(
                     "You don't have permission to edit this challenge",
                 ));
