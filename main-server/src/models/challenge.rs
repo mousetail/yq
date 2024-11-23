@@ -21,10 +21,10 @@ impl Default for NewChallenge {
             )
             .to_string(),
             judge: concat!(
-                "(async function*(code: Code): AsyncGenerator<TestCase, FinalVerdict, undefined> {\n",
-                "  yield (await code.run(undefined)).assertEquals('Hello World!');\n",
+                "(async function*(context: Context): Challenge {\n",
+                "  yield (await context.run(undefined)).assertEquals('Hello World!');\n",
                 "  //Your code here\n",
-                "  return code.noFailures();\n",
+                "  return context.noFailures();\n",
                 "})"
             )
             .to_string(),
