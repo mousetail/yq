@@ -66,6 +66,6 @@ pub const LANGS: &[Lang] = &[
         plugin: "https://github.com/lyxal/vyxasdf.git",
         env: &[],
         install_env: &[],
-        latest_version: "2.22.4",
+        latest_version: "2.22.4.3",
     },
 ];
