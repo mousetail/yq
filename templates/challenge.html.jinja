@@ -3,8 +3,8 @@
 {% extends "base/base.html.jinja" %}
 
 {% block content %}
-  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.challenge.name, author=object.challenge.author) }}
-  <h1>{{ object.challenge.challenge.name }}</h1>
+  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.name, author=object.challenge.author) }}
+  <h1>{{ object.challenge.name }}</h1>
   <p>
     A challenge by
     <img src="{{ object.challenge.author_avatar }}&size=18"
@@ -16,7 +16,7 @@
 
     <div>
       <h3>Description</h3>
-      {{ object.challenge.challenge.description | markdown }}
+      {{ object.challenge.description | markdown }}
     </div>
     <div class="leaderboard">
       <h3>Leaderboard</h3>

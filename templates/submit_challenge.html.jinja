@@ -4,29 +4,29 @@
 
 {% block content %}
   {% if object.id %}
-    {{ challenge_tabs::challenge_tabs(active="edit", id=object.id, name=object.challenge.name, author=object.author) }}
+    {{ challenge_tabs::challenge_tabs(active="edit", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
 
   <form method="post">
     <div>
       <label for="challenge-name">Name:</label>
-      <input type="text" id="challenge-name" name="name" value="{{ object.challenge.name }}" />
+      <input type="text" id="challenge-name" name="name" value="{{ object.name }}" />
     </div>
 
     <div>
       <label for="challenge-description">Description:</label>
-      <textarea id="challenge-description" name="description">{{- object.challenge.description -}}</textarea>
+      <textarea id="challenge-description" name="description">{{- object.description -}}</textarea>
     </div>
 
     <div>
       <label for="challenge-judge">Judge:</label>
-      <textarea id="challenge-judge" name="judge" class="codemirror lang-typescript">{{- object.challenge.judge -}}</textarea>
+      <textarea id="challenge-judge" name="judge" class="codemirror lang-typescript">{{- object.judge -}}</textarea>
     </div>
 
     <div>
       <label for="example-code">Example Code:</label>
       <p>Please don't golf the example code</p>
-      <textarea id="example-code" name="example_code" class="codemirror">{{- object.challenge.example_code -}}</textarea>
+      <textarea id="example-code" name="example_code" class="codemirror">{{- object.example_code -}}</textarea>
     </div>
 
     {% if account %}

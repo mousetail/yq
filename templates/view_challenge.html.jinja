@@ -4,22 +4,22 @@
 
 {% block content %}
   {% if object.id %}
-    {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.challenge.name, author=object.author ) }}
+    {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author ) }}
   {% endif %}
 
-  <h1>{{ object.challenge.name }}</h1>
+  <h1>{{ object.name }}</h1>
 
-  {{ object.challenge.description | markdown }}
+  {{ object.description | markdown }}
 
   <h2>Judge</h2>
 
-  <pre>{{- object.challenge.judge -}}</pre>
+  <pre>{{- object.judge -}}</pre>
 
   <h2>Example Code</h2>
 
   <pre>
     {{-
-      object.challenge.example_code
+      object.example_code
     -}}
   </pre>
 {% endblock content %}

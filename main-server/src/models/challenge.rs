@@ -72,6 +72,7 @@ pub struct ChallengeWithTests {
 pub struct Challenge {
     pub id: Option<i32>,
     #[sqlx(flatten)]
+    #[serde(flatten)]
     pub challenge: NewChallenge,
     pub author: i32,
 }

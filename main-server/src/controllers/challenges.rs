@@ -168,15 +168,20 @@ pub async fn new_challenge(
                 .execute(&pool)
                 .await
                 .unwrap();
+
+                // Tells the solution invalidator task to re-check all solutions
+                notify_challenge_updated();
             }
 
-            // Tells the solution invalidator task to re-check all solutions
-            notify_challenge_updated();
-
-            Ok(
-                AutoOutputFormat::new(new_challenge, "submit_challenge.html.jinja", format)
-                    .into_response(),
+            Ok(AutoOutputFormat::new(
+                ChallengeWithTests {
+                    challenge: new_challenge,
+                    tests,
+                },
+                "submit_challenge.html.jinja",
+                format,
             )
+            .into_response())
         }
     }
 }
