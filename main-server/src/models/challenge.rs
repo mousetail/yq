@@ -4,7 +4,7 @@ use sqlx::PgPool;
 
 use crate::error::Error;
 
-#[derive(sqlx::FromRow, Deserialize, Serialize)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct NewChallenge {
     pub description: String,
     pub judge: String,
@@ -21,10 +21,10 @@ impl Default for NewChallenge {
             )
             .to_string(),
             judge: concat!(
-                "(async function*(code: Code): AsyncGenerator<TestCase, FinalVerdict, undefined> {\n",
-                "  yield (await code.run(undefined)).assertEquals('Hello World!');\n",
+                "(async function*(context: Context): Challenge {\n",
+                "  yield (await context.run(undefined)).assertEquals('Hello World!');\n",
                 "  //Your code here\n",
-                "  return code.noFailures();\n",
+                "  return context.noFailures();\n",
                 "})"
             )
             .to_string(),
@@ -35,22 +35,49 @@ impl Default for NewChallenge {
 }
 
 #[derive(Serialize)]
-pub struct NewChallengeWithTests {
-    #[serde(flatten)]
-    pub challenge: NewChallenge,
-    pub tests: Option<RunLangOutput>,
-    pub id: Option<i32>,
+#[serde(untagged)]
+pub enum NewOrExistingChallenge {
+    Existing(ChallengeWithAuthorInfo),
+    New(NewChallenge),
+}
+impl NewOrExistingChallenge {
+    pub fn get_new_challenge(&self) -> &NewChallenge {
+        match self {
+            Self::Existing(e) => &e.challenge.challenge,
+            Self::New(k) => &k,
+        }
+    }
+
+    pub async fn get_by_id(pool: &PgPool, id: i32) -> Result<Option<Self>, Error> {
+        Ok(ChallengeWithAuthorInfo::get_by_id(pool, id)
+            .await?
+            .map(NewOrExistingChallenge::Existing))
+    }
 }
 
-#[derive(sqlx::FromRow, Deserialize, Serialize)]
+impl Default for NewOrExistingChallenge {
+    fn default() -> Self {
+        Self::New(NewChallenge::default())
+    }
+}
+
+#[derive(Serialize)]
+pub struct ChallengeWithTests {
+    #[serde(flatten)]
+    pub challenge: NewOrExistingChallenge,
+    pub tests: RunLangOutput,
+}
+
+#[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
 pub struct Challenge {
-    pub id: i32,
+    pub id: Option<i32>,
     #[sqlx(flatten)]
+    #[serde(flatten)]
     pub challenge: NewChallenge,
     pub author: i32,
 }
 
-#[derive(sqlx::FromRow, Deserialize, Serialize)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
 pub struct ChallengeWithAuthorInfo {
     #[sqlx(flatten)]
     #[serde(flatten)]

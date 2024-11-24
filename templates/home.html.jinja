@@ -40,7 +40,7 @@
       <ul>
         {% for challenge in object.challenges %}
           <li>
-            <a href="/challenge/{{ challenge.id }}/{{ challenge.challenge.name | slugify }}/solve">{{ challenge.challenge.name }}</a>
+            <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve">{{ challenge.name }}</a>
           </li>
         {% endfor %}
       </ul>

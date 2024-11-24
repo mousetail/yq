@@ -229,6 +229,7 @@ async fn insert_user(
             username: github_user.login.clone(),
             avatar: github_user.avatar_url.clone(),
             preferred_language: "python".to_owned(),
+            admin: false,
         }));
 
         Ok(())

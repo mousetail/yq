@@ -4,7 +4,7 @@
 
 {% block content %}
   {% if object.id %}
-    {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name) }}
+    {{ challenge_tabs::challenge_tabs(active="view", id=object.id, name=object.name, author=object.author ) }}
   {% endif %}
 
   <h1>{{ object.name }}</h1>
@@ -17,5 +17,9 @@
 
   <h2>Example Code</h2>
 
-  <pre>object.example_code</pre>
+  <pre>
+    {{-
+      object.example_code
+    -}}
+  </pre>
 {% endblock content %}

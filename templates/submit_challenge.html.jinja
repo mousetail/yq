@@ -4,7 +4,7 @@
 
 {% block content %}
   {% if object.id %}
-    {{ challenge_tabs::challenge_tabs(active="edit", id=object.id, name=object.name) }}
+    {{ challenge_tabs::challenge_tabs(active="edit", id=object.id, name=object.name, author=object.author) }}
   {% endif %}
 
   <form method="post">

@@ -9,6 +9,7 @@ pub enum Error {
     DatabaseError(sqlx::Error),
     OauthError(OauthError),
     RunLangError(String),
+    PermissionDenied(&'static str),
 }
 
 #[derive(Debug)]
@@ -57,6 +58,14 @@ impl IntoResponse for Error {
                 .body(Body::from(format!(
                     "<h2>Lang Runner Error</h2><pre>{}</pre>",
                     tera::escape_html(&s)
+                )))
+                .unwrap(),
+            Error::PermissionDenied(e) => Response::builder()
+                .status(StatusCode::FORBIDDEN)
+                .body(Body::from(format!(
+                    "<h2>Not Authorized</h2>
+                    <p>{}</p>",
+                    tera::escape_html(e)
                 )))
                 .unwrap(),
         }

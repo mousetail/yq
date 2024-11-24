@@ -15,7 +15,8 @@ use crate::{
     models::{
         account::Account,
         challenge::{
-            self, Challenge, ChallengeWithAuthorInfo, NewChallenge, NewChallengeWithTests,
+            Challenge, ChallengeWithAuthorInfo, ChallengeWithTests, NewChallenge,
+            NewOrExistingChallenge,
         },
     },
     slug::Slug,
@@ -49,22 +50,19 @@ pub async fn compose_challenge(
     id: Option<Path<(i32, String)>>,
     pool: Extension<PgPool>,
     format: Format,
-) -> Result<AutoOutputFormat<NewChallengeWithTests>, Error> {
+) -> Result<AutoOutputFormat<NewOrExistingChallenge>, Error> {
+    let challenge = match id {
+        None => NewOrExistingChallenge::default(),
+        Some(Path((id, _))) => {
+            let Some(o) = NewOrExistingChallenge::get_by_id(&pool, id).await? else {
+                return Err(Error::NotFound);
+            };
+            o
+        }
+    };
+
     Ok(AutoOutputFormat::new(
-        NewChallengeWithTests {
-            challenge: match &id {
-                Some(Path((id, _slug))) => match ChallengeWithAuthorInfo::get_by_id(&pool, *id)
-                    .await?
-                    .map(|d| d.challenge)
-                {
-                    Some(m) => m.challenge,
-                    None => return Err(Error::NotFound),
-                },
-                None => NewChallenge::default(),
-            },
-            tests: None,
-            id: id.map(|i| i.0 .0),
-        },
+        challenge,
         "submit_challenge.html.jinja",
         format,
     ))
@@ -74,19 +72,11 @@ pub async fn view_challenge(
     Path((id, _slug)): Path<(i32, String)>,
     pool: Extension<PgPool>,
     format: Format,
-) -> Result<AutoOutputFormat<NewChallengeWithTests>, Error> {
+) -> Result<AutoOutputFormat<NewOrExistingChallenge>, Error> {
     Ok(AutoOutputFormat::new(
-        match ChallengeWithAuthorInfo::get_by_id(&pool, id)
+        NewOrExistingChallenge::get_by_id(&pool, id)
             .await?
-            .map(|d| d.challenge)
-        {
-            Some(m) => NewChallengeWithTests {
-                challenge: m.challenge,
-                tests: None,
-                id: Some(id),
-            },
-            None => return Err(Error::NotFound),
-        },
+            .ok_or(Error::NotFound)?,
         "view_challenge.html.jinja",
         format,
     ))
@@ -99,6 +89,22 @@ pub async fn new_challenge(
     format: Format,
     AutoInput(challenge): AutoInput<NewChallenge>,
 ) -> Result<Response<Body>, Error> {
+    let (new_challenge, existing_challenge) = match id {
+        Some(Path((id, _))) => {
+            let existing_challenge = ChallengeWithAuthorInfo::get_by_id(&pool, id)
+                .await?
+                .ok_or(Error::NotFound)?;
+            let mut new_challenge = existing_challenge.clone();
+            new_challenge.challenge.challenge = challenge.clone();
+            (
+                NewOrExistingChallenge::Existing(new_challenge),
+                Some(existing_challenge),
+            )
+        }
+        None => (NewOrExistingChallenge::New(challenge), None),
+    };
+    let challenge = new_challenge.get_new_challenge();
+
     let tests = test_solution(
         &challenge.example_code,
         "nodejs",
@@ -111,10 +117,9 @@ pub async fn new_challenge(
 
     if !tests.tests.pass {
         return Ok(AutoOutputFormat::new(
-            NewChallengeWithTests {
-                challenge,
-                tests: Some(tests),
-                id: id.map(|i| i.0 .0),
+            ChallengeWithTests {
+                challenge: new_challenge,
+                tests,
             },
             "submit_challenge.html.jinja",
             format,
@@ -138,31 +143,40 @@ pub async fn new_challenge(
             let redirect =
                 Redirect::temporary(&format!("/challenge/{row}/{}/edit", Slug(&challenge.name)))
                     .into_response();
-            tokio::spawn(post_new_challenge(account, challenge, row));
+            tokio::spawn(post_new_challenge(account, new_challenge, row));
 
             Ok(redirect)
         }
         Some(Path((id, _slug))) => {
-            sqlx::query!(
-                r"UPDATE challenges SET name=$1, judge=$2, description=$3, example_code=$4 WHERE id=$5",
-                challenge.name,
-                challenge.judge,
-                challenge.description,
-                challenge.example_code,
-                id
-            )
-            .execute(&pool)
-            .await
-            .unwrap();
+            let existing_challenge = existing_challenge.unwrap(); // This can never fail
 
-            // Tells the solution invalidator task to re-check all solutions
-            notify_challenge_updated();
+            if !account.admin && existing_challenge.challenge.author != account.id {
+                return Err(Error::PermissionDenied(
+                    "You don't have permission to edit this challenge",
+                ));
+            }
+
+            if &existing_challenge.challenge.challenge != challenge {
+                sqlx::query!(
+                    r"UPDATE challenges SET name=$1, judge=$2, description=$3, example_code=$4 WHERE id=$5",
+                    challenge.name,
+                    challenge.judge,
+                    challenge.description,
+                    challenge.example_code,
+                    id
+                )
+                .execute(&pool)
+                .await
+                .unwrap();
+
+                // Tells the solution invalidator task to re-check all solutions
+                notify_challenge_updated();
+            }
 
             Ok(AutoOutputFormat::new(
-                NewChallengeWithTests {
-                    challenge,
-                    tests: Some(tests),
-                    id: Some(id),
+                ChallengeWithTests {
+                    challenge: new_challenge,
+                    tests,
                 },
                 "submit_challenge.html.jinja",
                 format,
