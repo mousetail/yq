@@ -5,6 +5,7 @@ use sqlx::{query_as, query_scalar, PgPool};
 use crate::{
     auto_output_format::{AutoOutputFormat, Format},
     error::Error,
+    models::{account::Account, solutions::InvalidatedSolution},
 };
 
 #[derive(Serialize)]
@@ -19,10 +20,13 @@ pub struct UserPageLeaderboardEntry {
 pub struct UserInfo {
     user_name: String,
     solutions: Vec<UserPageLeaderboardEntry>,
+    invalidated_solutions: Option<Vec<InvalidatedSolution>>,
+    id: i32,
 }
 
 pub async fn get_user(
     Path(id): Path<i32>,
+    account: Option<Account>,
     format: Format,
     Extension(pool): Extension<PgPool>,
 ) -> Result<AutoOutputFormat<UserInfo>, Error> {
@@ -32,6 +36,15 @@ pub async fn get_user(
         .map_err(Error::DatabaseError)?;
     let Some(user_name) = user_name else {
         return Err(Error::NotFound);
+    };
+
+    let invalidated_solutions = match account {
+        Some(acc) if acc.id == id => Some(
+            InvalidatedSolution::get_invalidated_solutions_for_user(id, &pool)
+                .await
+                .map_err(Error::DatabaseError)?,
+        ),
+        _ => None,
     };
 
     let solutions = query_as!(
@@ -49,6 +62,8 @@ pub async fn get_user(
         UserInfo {
             solutions,
             user_name,
+            id,
+            invalidated_solutions,
         },
         "user.html.jinja",
         format,

@@ -44,7 +44,7 @@ impl NewOrExistingChallenge {
     pub fn get_new_challenge(&self) -> &NewChallenge {
         match self {
             Self::Existing(e) => &e.challenge.challenge,
-            Self::New(k) => &k,
+            Self::New(k) => k,
         }
     }
 

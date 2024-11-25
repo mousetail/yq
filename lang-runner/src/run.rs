@@ -227,7 +227,7 @@ pub async fn process_message(
         .latest_version;
 
     // Runner Lang
-    install_lang("deno".to_owned(), &deno_latest_version, lang_versions)
+    install_lang("deno".to_owned(), deno_latest_version, lang_versions)
         .await
         .map_err(RunLangError::PluginInstallFailure)?;
 
@@ -245,7 +245,7 @@ pub async fn process_message(
         &message.code,
         &message.judge,
         "deno",
-        &deno_latest_version,
+        deno_latest_version,
     )
     .await
     .map_err(RunLangError::RunLangError)?;

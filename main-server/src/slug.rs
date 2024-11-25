@@ -18,9 +18,9 @@ impl Display for Slug<'_> {
         let trimmed_value = self.0.trim();
 
         let mut start = 0;
-        let mut iter = trimmed_value.char_indices();
+        let iter = trimmed_value.char_indices();
         let mut last_is_space = false;
-        while let Some((index, chr)) = iter.next() {
+        for (index, chr) in iter {
             if chr.is_ascii_uppercase() {
                 write_previous!(f, trimmed_value, start, index, last_is_space);
                 f.write_char(chr.to_ascii_lowercase())?;

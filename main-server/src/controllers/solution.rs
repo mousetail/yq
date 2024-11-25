@@ -97,10 +97,10 @@ pub async fn challenge_redirect_no_slug(
         return Err(Error::NotFound);
     };
 
-    return Ok(Redirect::permanent(&format!(
+    Ok(Redirect::permanent(&format!(
         "/challenge/{id}/{}/solve/{language}",
         Slug(&slug)
-    )));
+    )))
 }
 
 pub async fn new_solution(

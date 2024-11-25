@@ -18,6 +18,7 @@ use crate::{
             Challenge, ChallengeWithAuthorInfo, ChallengeWithTests, NewChallenge,
             NewOrExistingChallenge,
         },
+        solutions::InvalidatedSolution,
     },
     slug::Slug,
     solution_invalidation::notify_challenge_updated,
@@ -27,10 +28,12 @@ use crate::{
 #[derive(Serialize)]
 pub struct AllChallengesOutput {
     challenges: Vec<Challenge>,
+    invalid_solutions_exist: bool,
 }
 
 pub async fn all_challenges(
     Extension(pool): Extension<PgPool>,
+    account: Option<Account>,
     format: Format,
 ) -> Result<AutoOutputFormat<AllChallengesOutput>, Error> {
     let sql = "SELECT * FROM challenges ORDER BY created_at DESC";
@@ -39,8 +42,19 @@ pub async fn all_challenges(
         .await
         .map_err(Error::DatabaseError)?;
 
+    let invalid_solutions_exist = if let Some(account) = account {
+        InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
+            .await
+            .map_err(Error::DatabaseError)?
+    } else {
+        false
+    };
+
     Ok(AutoOutputFormat::new(
-        AllChallengesOutput { challenges },
+        AllChallengesOutput {
+            challenges,
+            invalid_solutions_exist,
+        },
         "home.html.jinja",
         format,
     ))
