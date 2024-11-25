@@ -6,7 +6,7 @@
         <span class="tab {% if active=="view" %} active {% endif %}">
             <a href="/challenge/{{ id }}/{{name | slugify }}/view">View</a>
         </span>
-        {% if account.id == author or account.admin %}
+        {% if account and (account.id == author or account.admin) %}
             <span class="tab {% if active=="edit" %} active {% endif %}">
                 <a href="/challenge/{{ id }}/{{name | slugify }}/edit">Edit</a>
             </span>
