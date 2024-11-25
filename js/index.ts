@@ -90,7 +90,7 @@ window.addEventListener('load', async () => {
 
     for (const textarea of document.querySelectorAll<HTMLTextAreaElement>('textarea.codemirror')) {
 
-        let plugins = basicSetup;
+        let plugins: typeof basicSetup = [basicSetup, EditorView.lineWrapping];
         if (textarea.classList.contains('lang-typescript')) {
             plugins = await initTypescriptForCodebox()
         }
