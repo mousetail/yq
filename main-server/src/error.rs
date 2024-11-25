@@ -6,18 +6,18 @@ pub enum Error {
     NotFound,
     #[allow(clippy::enum_variant_names)]
     ServerError,
-    DatabaseError(sqlx::Error),
-    OauthError(OauthError),
-    RunLangError(String),
+    Database(sqlx::Error),
+    Oauth(OauthError),
+    RunLang(String),
     PermissionDenied(&'static str),
 }
 
 #[derive(Debug)]
 pub enum OauthError {
-    TokenExchangeFailed,
-    UserInfoFetchFailed,
-    DeserializationFailed,
-    CsrfValidationFailed,
+    TokenExchange,
+    UserInfoFetch,
+    Deserialization,
+    CsrfValidation,
 }
 
 impl IntoResponse for OauthError {
@@ -45,15 +45,15 @@ impl IntoResponse for Error {
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Body::empty())
                 .unwrap(),
-            Error::DatabaseError(e) => Response::builder()
+            Error::Database(e) => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Body::from(format!(
                     "Database Error: <pre>{}</pre>",
                     tera::escape_html(&format!("{e:#?}"))
                 )))
                 .unwrap(),
-            Error::OauthError(oauth_error) => oauth_error.into_response(),
-            Error::RunLangError(s) => Response::builder()
+            Error::Oauth(oauth_error) => oauth_error.into_response(),
+            Error::RunLang(s) => Response::builder()
                 .status(StatusCode::INTERNAL_SERVER_ERROR)
                 .body(Body::from(format!(
                     "<h2>Lang Runner Error</h2><pre>{}</pre>",

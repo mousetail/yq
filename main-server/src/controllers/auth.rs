@@ -105,8 +105,8 @@ pub async fn github_callback(
         .and_then(|b| b)
         .is_some_and(|d: CsrfToken| d.secret() == state.secret())
     {
-        return Err(Error::OauthError(
-            crate::error::OauthError::CsrfValidationFailed,
+        return Err(Error::Oauth(
+            crate::error::OauthError::CsrfValidation,
         ));
     }
 
@@ -114,7 +114,7 @@ pub async fn github_callback(
         .exchange_code(code)
         .request_async(&http_client)
         .await
-        .map_err(|_| Error::OauthError(crate::error::OauthError::TokenExchangeFailed))?;
+        .map_err(|_| Error::Oauth(crate::error::OauthError::TokenExchange))?;
 
     let token = token_res.access_token();
 
@@ -126,13 +126,13 @@ pub async fn github_callback(
         .bearer_auth(token.secret())
         .send()
         .await
-        .map_err(|_k| Error::OauthError(crate::error::OauthError::UserInfoFetchFailed))?;
+        .map_err(|_k| Error::Oauth(crate::error::OauthError::UserInfoFetch))?;
 
     if response.status().is_success() {
         let mut user_info: GithubUser = response
             .json()
             .await
-            .map_err(|_k| Error::OauthError(crate::error::OauthError::DeserializationFailed))?;
+            .map_err(|_k| Error::Oauth(crate::error::OauthError::Deserialization))?;
 
         if user_info.avatar_url.len() > 255 {
             // TODO: Figure out why this happens
@@ -172,7 +172,7 @@ async fn insert_user(
         .bind(github_user.id)
         .fetch_optional(pool)
         .await
-        .map_err(Error::DatabaseError)?;
+        .map_err(Error::Database)?;
 
     if let Some(user) = user {
         let sql: &str =
@@ -189,7 +189,7 @@ async fn insert_user(
             .bind(user.id)
             .fetch_optional(pool)
             .await
-            .map_err(Error::DatabaseError)?;
+            .map_err(Error::Database)?;
 
         session.insert(ACCOUNT_ID_KEY, user.account).await.unwrap();
 
@@ -202,7 +202,7 @@ async fn insert_user(
             .bind(&github_user.avatar_url)
             .fetch_one(pool)
             .await
-            .map_err(Error::DatabaseError)?;
+            .map_err(Error::Database)?;
 
         let sql: &str =
             "INSERT INTO account_oauth_codes(account, access_token, refresh_token, id_on_provider) VALUES
@@ -220,7 +220,7 @@ async fn insert_user(
             .bind(github_user.id)
             .execute(pool)
             .await
-            .map_err(Error::DatabaseError)?;
+            .map_err(Error::Database)?;
 
         session.insert(ACCOUNT_ID_KEY, new_user_id.0).await.unwrap();
 

@@ -40,12 +40,12 @@ pub async fn all_challenges(
     let challenges = sqlx::query_as::<_, Challenge>(sql)
         .fetch_all(&pool)
         .await
-        .map_err(Error::DatabaseError)?;
+        .map_err(Error::Database)?;
 
     let invalid_solutions_exist = if let Some(account) = account {
         InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
             .await
-            .map_err(Error::DatabaseError)?
+            .map_err(Error::Database)?
     } else {
         false
     };
@@ -152,7 +152,7 @@ pub async fn new_challenge(
             )
                 .fetch_one(&pool)
                 .await
-                .map_err(Error::DatabaseError)?;
+                .map_err(Error::Database)?;
 
             let redirect =
                 Redirect::temporary(&format!("/challenge/{row}/{}/edit", Slug(&challenge.name)))

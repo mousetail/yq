@@ -248,7 +248,7 @@ pub async fn process_message(
         deno_latest_version,
     )
     .await
-    .map_err(RunLangError::RunLangError)?;
+    .map_err(RunLangError::RunLang)?;
     Ok(output)
 }
 

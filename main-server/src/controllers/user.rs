@@ -33,7 +33,7 @@ pub async fn get_user(
     let user_name = query_scalar!("SELECT username FROM accounts WHERE id=$1", id)
         .fetch_optional(&pool)
         .await
-        .map_err(Error::DatabaseError)?;
+        .map_err(Error::Database)?;
     let Some(user_name) = user_name else {
         return Err(Error::NotFound);
     };
@@ -42,7 +42,7 @@ pub async fn get_user(
         Some(acc) if acc.id == id => Some(
             InvalidatedSolution::get_invalidated_solutions_for_user(id, &pool)
                 .await
-                .map_err(Error::DatabaseError)?,
+                .map_err(Error::Database)?,
         ),
         _ => None,
     };
@@ -56,7 +56,7 @@ pub async fn get_user(
         AND solutions.valid=true",
         id
     ).fetch_all(&pool).await
-    .map_err(Error::DatabaseError)?;
+    .map_err(Error::Database)?;
 
     Ok(AutoOutputFormat::new(
         UserInfo {
