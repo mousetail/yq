@@ -1,18 +1,14 @@
 {% extends "base/base.html.jinja" %}
-
 {% block content %}
   {% if object.invalid_solutions_exist %}
     <div class="warning">
       You have some submissions that have been made invalid by updates to the challenge. Please go to your <a href="/user/{{ account.id }}">profile page</a> for a full list, to resubmit them.
     </div>
   {% endif %}
-
   <div class="two-column-description">
     <div class="content">
       <h1>Byte Heist</h1>
-      <p>
-        Byte Heist is a site where you can test your coding skills by solving challenges in as few bytes as possible.
-      </p>
+      <p>Byte Heist is a site where you can test your coding skills by solving challenges in as few bytes as possible.</p>
       <p>
         The site will be similar to sites like code.golf, anarchy golf, and the late week.golf. Some unique features will include:
       </p>

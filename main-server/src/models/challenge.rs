@@ -1,8 +1,33 @@
 use common::RunLangOutput;
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{error::BoxDynError, prelude::FromRow, Decode, PgPool, Row, Type};
 
 use crate::error::Error;
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[serde(rename_all="kebab-case")]
+enum ChallengeStatus {
+    Draft,
+    Private,
+    Beta,
+    Public,
+}
+
+impl Default for ChallengeStatus {
+    fn default() -> Self {
+        Self::Draft
+    }
+}
+
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
+#[serde(rename_all="kebab-case")]
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "challenge_category", rename_all = "kebab-case")]
+pub enum ChallengeCategory {
+    CodeGolf,
+    RestrictedSource,
+    Private
+}
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Eq, PartialEq, Clone)]
 pub struct NewChallenge {
@@ -10,6 +35,7 @@ pub struct NewChallenge {
     pub judge: String,
     pub name: String,
     pub example_code: String,
+    pub category: ChallengeCategory
 }
 
 impl Default for NewChallenge {
@@ -30,6 +56,7 @@ impl Default for NewChallenge {
             .to_string(),
             name: String::new(),
             example_code: String::new(),
+            category: ChallengeCategory::RestrictedSource
         }
     }
 }
@@ -95,6 +122,7 @@ impl ChallengeWithAuthorInfo {
             challenges.judge,
             challenges.example_code,
             challenges.author,
+            challenges.category,
             accounts.username as author_name,
             accounts.avatar as author_avatar
             FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id
