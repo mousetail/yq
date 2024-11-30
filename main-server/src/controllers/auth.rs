@@ -105,9 +105,7 @@ pub async fn github_callback(
         .and_then(|b| b)
         .is_some_and(|d: CsrfToken| d.secret() == state.secret())
     {
-        return Err(Error::Oauth(
-            crate::error::OauthError::CsrfValidation,
-        ));
+        return Err(Error::Oauth(crate::error::OauthError::CsrfValidation));
     }
 
     let token_res = client

@@ -15,7 +15,8 @@ use crate::{
     models::{
         account::Account,
         challenge::{
-            Challenge, ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo, ChallengeWithTests, NewChallenge, NewOrExistingChallenge
+            Challenge, ChallengeCategory, ChallengeStatus, ChallengeWithAuthorInfo,
+            ChallengeWithTests, NewChallenge, NewOrExistingChallenge,
         },
         solutions::InvalidatedSolution,
     },
@@ -44,9 +45,9 @@ pub async fn all_challenges(
 
     let sql = "SELECT * FROM challenges WHERE status='beta' AND category!='private' ORDER BY created_at DESC";
     let beta_challenges = sqlx::query_as::<_, Challenge>(sql)
-    .fetch_all(&pool)
-    .await
-    .map_err(Error::Database)?;
+        .fetch_all(&pool)
+        .await
+        .map_err(Error::Database)?;
 
     let invalid_solutions_exist = if let Some(account) = account {
         InvalidatedSolution::invalidated_solution_exists(account.id, &pool)
@@ -126,12 +127,15 @@ pub async fn new_challenge(
     };
     let challenge = new_challenge.get_new_challenge();
 
-    if let Err(e) = challenge.validate(existing_challenge.as_ref().map(|k|&k.challenge.challenge), account.admin) {
+    if let Err(e) = challenge.validate(
+        existing_challenge.as_ref().map(|k| &k.challenge.challenge),
+        account.admin,
+    ) {
         return Ok(AutoOutputFormat::new(
             ChallengeWithTests {
                 challenge: new_challenge,
                 tests: None,
-                validation: Some(e)
+                validation: Some(e),
             },
             "submit_challenge.html.jinja",
             format,
@@ -155,7 +159,7 @@ pub async fn new_challenge(
             ChallengeWithTests {
                 challenge: new_challenge,
                 tests: Some(tests),
-                validation: None
+                validation: None,
             },
             "submit_challenge.html.jinja",
             format,
@@ -166,7 +170,8 @@ pub async fn new_challenge(
 
     match id {
         None => {
-            let row = sqlx::query_scalar!(r#"
+            let row = sqlx::query_scalar!(
+                r#"
                 INSERT INTO challenges (name, judge, description, author, status, category)
                 values ($1, $2, $3, $4, $5::challenge_status, $6::challenge_category)
                 RETURNING id"#,
@@ -177,9 +182,9 @@ pub async fn new_challenge(
                 challenge.status as ChallengeStatus,
                 challenge.category as ChallengeCategory,
             )
-                .fetch_one(&pool)
-                .await
-                .map_err(Error::Database)?;
+            .fetch_one(&pool)
+            .await
+            .map_err(Error::Database)?;
 
             let redirect =
                 Redirect::temporary(&format!("/challenge/{row}/{}/edit", Slug(&challenge.name)))
@@ -218,7 +223,9 @@ pub async fn new_challenge(
                 // Tells the solution invalidator task to re-check all solutions
                 notify_challenge_updated();
 
-                if existing_challenge.challenge.challenge.status != ChallengeStatus::Public && challenge.status == ChallengeStatus::Public {
+                if existing_challenge.challenge.challenge.status != ChallengeStatus::Public
+                    && challenge.status == ChallengeStatus::Public
+                {
                     tokio::spawn(post_new_challenge(account, new_challenge.clone(), id));
                 }
             }
@@ -227,7 +234,7 @@ pub async fn new_challenge(
                 ChallengeWithTests {
                     challenge: new_challenge,
                     tests: Some(tests),
-                    validation: None
+                    validation: None,
                 },
                 "submit_challenge.html.jinja",
                 format,
