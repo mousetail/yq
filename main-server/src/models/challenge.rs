@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use common::RunLangOutput;
 use serde::{Deserialize, Serialize};
 use sqlx::{error::BoxDynError, prelude::FromRow, Decode, PgPool, Row, Type};
@@ -6,7 +8,9 @@ use crate::error::Error;
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all="kebab-case")]
-enum ChallengeStatus {
+#[derive(sqlx::Type)]
+#[sqlx(type_name = "challenge_status", rename_all = "kebab-case")]
+pub enum ChallengeStatus {
     Draft,
     Private,
     Beta,
@@ -35,7 +39,34 @@ pub struct NewChallenge {
     pub judge: String,
     pub name: String,
     pub example_code: String,
-    pub category: ChallengeCategory
+    pub category: ChallengeCategory,
+    pub status: ChallengeStatus
+}
+
+impl NewChallenge {
+    pub fn validate(&self, previous: Option<&NewChallenge>, is_admin: bool) -> Result<(), HashMap<&'static str, &'static str>> {
+        let mut errors = HashMap::new();
+        if self.name.is_empty() {
+            errors.insert("name", "name can't be empty");
+        }
+        if self.description.is_empty() {
+            errors.insert("description", "description can not be empty");
+        }
+        if self.status == ChallengeStatus::Public && !is_admin && previous.is_none_or(|k|k.status == ChallengeStatus::Public) {
+            errors.insert("status", "you can't make a challenge public");
+        } else if self.status != ChallengeStatus::Public && !is_admin && previous.is_some_and(|k|k.status == ChallengeStatus::Public) {
+            errors.insert("status", "You can't make a published challenge private again");
+        }
+
+        if !is_admin && previous.is_some_and(|k|k.status == ChallengeStatus::Public && k.category != self.category) {
+            errors.insert("category", "can't change the category of a live challenge");
+        }
+        if errors.is_empty() {
+            return Ok(())
+        } else {
+            return Err(errors)
+        }
+    }
 }
 
 impl Default for NewChallenge {
@@ -56,12 +87,13 @@ impl Default for NewChallenge {
             .to_string(),
             name: String::new(),
             example_code: String::new(),
-            category: ChallengeCategory::RestrictedSource
+            category: ChallengeCategory::RestrictedSource,
+            status: ChallengeStatus::Draft
         }
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Clone)]
 #[serde(untagged)]
 pub enum NewOrExistingChallenge {
     Existing(ChallengeWithAuthorInfo),
@@ -92,7 +124,8 @@ impl Default for NewOrExistingChallenge {
 pub struct ChallengeWithTests {
     #[serde(flatten)]
     pub challenge: NewOrExistingChallenge,
-    pub tests: RunLangOutput,
+    pub tests: Option<RunLangOutput>,
+    pub validation: Option<HashMap<&'static str, &'static str>>
 }
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Clone)]
@@ -123,6 +156,7 @@ impl ChallengeWithAuthorInfo {
             challenges.example_code,
             challenges.author,
             challenges.category,
+            challenges.status,
             accounts.username as author_name,
             accounts.avatar as author_avatar
             FROM challenges LEFT JOIN accounts ON challenges.author = accounts.id

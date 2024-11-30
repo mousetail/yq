@@ -229,3 +229,7 @@ button {
   justify-content: space-between;
   align-items: center;
 }
+
+.validation-error {
+  color: red;
+}

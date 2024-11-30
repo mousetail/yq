@@ -38,11 +38,35 @@
       </p>
     </div>
     <div id="challenges">
-      <h1>Challenges</h1>
+      <h2>Challenges</h2>
       <ul>
-        {% for challenge in object.challenges %}
+        {% for challenge in object.public_challenges %}
           <li>
             <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve">{{ challenge.name }}</a>
+            <div class="challenge-category">
+              {% if challenge.category == 'code-golf' %}
+                Code Golf
+              {% elif challenge.category == 'restricted-source' %}
+                Restricted Source
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+
+      <h2>Beta Challenges</h2>
+      <ul>
+        {% for challenge in object.beta_challenges %}
+          <li>
+            <a href="/challenge/{{ challenge.id }}/{{ challenge.name | slugify }}/solve">{{ challenge.name }}</a>
+            <div class="challenge-category">
+              {% if challenge.category == 'code-golf' %}
+                Code Golf
+              {% elif challenge.category == 'restricted-source' %}
+                Restricted Source
+              {% endif %}
+            </div>
           </li>
         {% endfor %}
       </ul>
