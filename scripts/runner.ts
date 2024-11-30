@@ -106,7 +106,7 @@ const compile_and_run_program = (() => {
     ).default as ((code: Context) => AsyncGenerator<TestCase, FinalVerdict, undefined>);
 
     const on_run_callback = async (program: string, input?: string | undefined): Promise<RunCompiledCodeResult> => {
-        writeFile('/tmp/code', program);
+        await writeFile('/tmp/code', program);
         return await compile_and_run_program(
             lang,
             program,
