@@ -75,6 +75,6 @@ pub const LANGS: &[Lang] = &[
         plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
         env: &[],
         install_env: &[],
-        latest_version: "0.11.0.0",
+        latest_version: "0.11.0.1",
     },
 ];
