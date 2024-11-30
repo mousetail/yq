@@ -92,15 +92,15 @@ pub async fn challenge_redirect_no_slug(
     let Some(slug) = query_scalar!("SELECT name FROM challenges WHERE id=$1", id)
         .fetch_optional(&pool)
         .await
-        .map_err(Error::DatabaseError)?
+        .map_err(Error::Database)?
     else {
         return Err(Error::NotFound);
     };
 
-    return Ok(Redirect::permanent(&format!(
+    Ok(Redirect::permanent(&format!(
         "/challenge/{id}/{}/solve/{language}",
         Slug(&slug)
-    )));
+    )))
 }
 
 pub async fn new_solution(

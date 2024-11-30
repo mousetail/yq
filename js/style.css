@@ -68,7 +68,7 @@ header {
 }
 
 main {
-  max-width: 62rem;
+  width: calc(min(62rem, 100%));
   margin: 4rem auto;
   padding: 0 1rem;
 }
@@ -228,4 +228,8 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.validation-error {
+  color: red;
 }

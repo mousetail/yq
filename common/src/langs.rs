@@ -62,11 +62,11 @@ pub const LANGS: &[Lang] = &[
     Lang {
         name: "vyxal",
         compile_command: &[],
-        run_command: &["${LANG_LOCATION}/bin/vyxal2", "${FILE_LOCATION}"],
+        run_command: &["${LANG_LOCATION}/bin/vyxal2", "${FILE_LOCATION}", "'□'"],
         plugin: "https://github.com/lyxal/vyxasdf.git",
         env: &[],
         install_env: &[],
-        latest_version: "2.22.2",
+        latest_version: "2.22.4.3",
     },
     Lang {
         name: "tinyapl",

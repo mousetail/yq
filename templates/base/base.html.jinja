@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
     {% block head %}
       <title>Byte Heist</title>
       <meta name="description" value="Yet Another Golf Site" />
@@ -10,11 +9,9 @@
       <meta charset="UTF-8" />
       <link rel="icon" href="/static/favicon.svg" />
     {% endblock head %}
-
     {% block scripts %}
       {{ modules(modules="js/index.ts") | safe }}
     {% endblock scripts %}
-
     {% if dev %}
       <!-- temporary hacks to get webworkers to work during dev -->
       <script>
@@ -51,7 +48,9 @@
         <div>
           {% if account %}
             {{ account.username }}
-            <img src="{{ account.avatar }}&size=18" width="18" alt="{{ account.username }} profile picture" />
+            <img src="{{ account.avatar }}&size=18"
+                 width="18"
+                 alt="{{ account.username }} profile picture" />
           {% else %}
             <a href="/login/github">Login</a>
           {% endif %}

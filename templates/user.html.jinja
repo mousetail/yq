@@ -18,4 +18,23 @@
       </tr>
     {% endfor %}
   </table>
+  {% if account and account.id == object.id %}
+    <h2>Invalid Solutions</h2>
+    <table>
+      <tr>
+        <th>Challenge</th>
+        <th>Language</th>
+      </tr>
+      {% for solution in object.invalidated_solutions %}
+        <tr>
+          <td>
+            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.language }}</a>
+          </td>
+          <td>
+            <a href="/challenge/{{ solution.challenge_id }}/{{ solution.challenge_name | slugify }}/solve/{{ solution.language }}">{{ solution.challenge_name }}</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
 {% endblock content %}

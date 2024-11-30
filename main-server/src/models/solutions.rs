@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::PgPool;
+use sqlx::{query_as, query_scalar, PgPool};
 use tower_sessions::cookie::time::OffsetDateTime;
 
 #[derive(sqlx::FromRow, Deserialize, Serialize)]
@@ -87,5 +87,42 @@ impl LeaderboardEntry {
         .fetch_all(pool)
         .await
         .unwrap()
+    }
+}
+
+#[derive(Serialize)]
+pub struct InvalidatedSolution {
+    language: String,
+    challenge_id: i32,
+    challenge_name: String,
+}
+
+impl InvalidatedSolution {
+    pub async fn get_invalidated_solutions_for_user(
+        user: i32,
+        pool: &PgPool,
+    ) -> Result<Vec<InvalidatedSolution>, sqlx::Error> {
+        let result = query_as!(
+            InvalidatedSolution,
+            "SELECT solutions.language, challenges.id as challenge_id, challenges.name as challenge_name
+            FROM solutions LEFT JOIN challenges ON solutions.challenge = challenges.id
+            WHERE solutions.valid = false AND solutions.author = $1",
+            user
+        ).fetch_all(pool).await?;
+
+        Ok(result)
+    }
+
+    pub async fn invalidated_solution_exists(
+        user: i32,
+        pool: &PgPool,
+    ) -> Result<bool, sqlx::Error> {
+        Ok(query_scalar!(
+            "SELECT EXISTS (SELECT * FROM solutions WHERE valid=false AND author=$1)",
+            user
+        )
+        .fetch_one(pool)
+        .await?
+        .unwrap())
     }
 }

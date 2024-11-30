@@ -4,7 +4,7 @@ use reqwest::StatusCode;
 use serde::Serialize;
 
 use crate::{
-    models::{account::Account, challenge::NewChallenge},
+    models::{account::Account, challenge::NewOrExistingChallenge},
     slug::Slug,
 };
 
@@ -59,7 +59,9 @@ pub async fn post_discord_webhook(request: WebHookRequest<'_>) -> Result<(), Dis
     Ok(())
 }
 
-pub async fn post_new_challenge(account: Account, challenge: NewChallenge, row: i32) {
+pub async fn post_new_challenge(account: Account, challenge: NewOrExistingChallenge, row: i32) {
+    let challenge = challenge.get_new_challenge();
+
     match post_discord_webhook(WebHookRequest {
         content: None,
         username: Some(&account.username),

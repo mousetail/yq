@@ -2,6 +2,7 @@ export type PassState = 'Pass' | 'Fail' | 'Warning' | 'Info';
 export type ResultDisplay = { 'Diff': { expected: string, output: string } }
     | { 'Text': string }
     | { 'Run': { input?: string | undefined, output: string, error: string } };
+export type Challenge = AsyncGenerator<TestCase, FinalVerdict, undefined>;
 
 export class TestCase {
     name: string | undefined;
@@ -46,11 +47,11 @@ export interface RunCompiledCodeResult extends RunCodeResult {
 }
 
 export class StringResult {
-    protected code: Code
+    protected context: Context
     public text: string
 
-    public constructor(code: Code, text: string) {
-        this.code = code;
+    public constructor(context: Context, text: string) {
+        this.context = context;
         this.text = text;
     }
 
@@ -66,13 +67,13 @@ export class StringResult {
                 }
             }
         );
-        this.code.testCases.push(testCase);
+        this.context.testCases.push(testCase);
         return testCase;
     }
 
     public assert(cb: (k: string) => TestCase): TestCase {
         const vestCase = cb(this.text);
-        this.code.testCases.push(vestCase);
+        this.context.testCases.push(vestCase);
         return vestCase
     }
 }
@@ -80,17 +81,17 @@ export class StringResult {
 export class RunResult extends StringResult {
     private stderr: string;
 
-    public constructor(code: Code, result: RunCodeResult) {
-        super(code, result.stdout);
+    public constructor(context: Context, result: RunCodeResult) {
+        super(context, result.stdout);
         this.stderr = result.stderr;
     }
 
     public error() {
-        return new StringResult(this.code, this.stderr);
+        return new StringResult(this.context, this.stderr);
     }
 }
 
-export class Code {
+export class Context {
     public code: string;
     private onRunCallback: (code: string, input: string | undefined) => Promise<RunCompiledCodeResult>;
     public testCases: TestCase[];
@@ -149,4 +150,19 @@ export const eqIgnoreTrailingWhitespace = (a: string, b: string): boolean => {
         (text) => text.replace(/\s*(?=\n|$)/ug, '')
     )
     return a_stripped == b_stripped
+}
+
+export function range(a: number, b?: number): number[] {
+    return b === undefined ? [...Array(a).keys()] : range(b - a).map(x => x + a);
+}
+
+export function rand(a: number, b?: number): number {
+    return b === undefined ? Math.floor(Math.random() * a) : rand(b - a) + a;
+}
+
+export function shuffle(array: unknown[]): void {
+    for (let i = array.length - 1; i >= 0; i--) {
+        const j = rand(i + 1);
+        [array[i], array[j]] = [array[j], array[i]];
+    }
 }

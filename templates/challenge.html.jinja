@@ -1,10 +1,9 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% extends "base/base.html.jinja" %}
-
 {% block content %}
-  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.challenge.name) }}
-  <h1>{{ object.challenge.challenge.name }}</h1>
+  {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.name, author=object.challenge.author) }}
+  <h1>{{ object.challenge.name }}</h1>
   <p>
     A challenge by
     <img src="{{ object.challenge.author_avatar }}&size=18"
@@ -13,14 +12,12 @@
     {{ object.challenge.author_name }}
   </p>
   <div class="two-column-description">
-
     <div>
       <h3>Description</h3>
-      {{ object.challenge.challenge.description | markdown }}
+      {{ object.challenge.description | markdown }}
     </div>
     <div class="leaderboard">
       <h3>Leaderboard</h3>
-
       <table>
         <tr>
           <th></th>
@@ -30,7 +27,9 @@
         {% for solution in object.leaderboard %}
           <tr>
             <td>
-              <img src="{{ solution.author_avatar }}&size=18" alt="{{ solution.author_name }} avatar" height="18" />
+              <img src="{{ solution.author_avatar }}&size=18"
+                   alt="{{ solution.author_name }} avatar"
+                   height="18" />
             </td>
             <td>
               <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
@@ -45,13 +44,11 @@
       </table>
     </div>
   </div>
-
   <div class="lang-list">
     {% for lang in languages() %}
       <a href="/{{ object.challenge.id }}/{{ lang.name }}" class="lang">{{ lang.name }}</a>
     {% endfor %}
   </div>
-
   <form method="post">
     {% if object.previous_solution_invalid %}
       <div class="warning">
@@ -72,15 +69,12 @@
           {{- object.code -}}
         {%- endif -%}
 </textarea>
-
     {% if account %}
-      <button type="submit">Submit!</button>
+      <button>Submit!</button>
     {% else %}
       <div class="warning">You must be logged in to submit a solution.</div>
-
       <button type="submit" disabled>Submit!</button>
     {% endif %}
   </form>
-
   {% if object.tests %}{{ test_cases::test_cases(cases=object.tests) }}{% endif %}
 {% endblock content %}

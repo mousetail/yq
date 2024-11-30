@@ -2,7 +2,7 @@ import { argv, stdin } from 'node:process';
 import { writeFile } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { readFileSync } from 'node:fs';
-import { Code, FinalVerdict, RunCodeResult, RunCompiledCodeResult, TestCase } from './runner-lib.ts';
+import { Context, FinalVerdict, RunCodeResult, RunCompiledCodeResult, TestCase } from './runner-lib.ts';
 
 type Lang = {
     name: string,
@@ -103,7 +103,7 @@ const compile_and_run_program = (() => {
             '\nexport default ' +
             judge
         ))
-    ).default as ((code: Code) => AsyncGenerator<TestCase, FinalVerdict, undefined>);
+    ).default as ((code: Context) => AsyncGenerator<TestCase, FinalVerdict, undefined>);
 
     const on_run_callback = async (program: string, input?: string | undefined): Promise<RunCompiledCodeResult> => {
         writeFile('/tmp/code', program);
@@ -114,7 +114,7 @@ const compile_and_run_program = (() => {
         );
     };
 
-    const generator = judge_function(new Code(code, on_run_callback));
+    const generator = judge_function(new Context(code, on_run_callback));
 
     let value: IteratorResult<TestCase, FinalVerdict>;
     while (!(value = await generator.next()).done) {
