@@ -82,7 +82,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
         env: &[],
         install_env: &[],
-        latest_version: "0.11.0.1",
+        latest_version: "0.11.1.0",
         icon: "tinyapl.svg"
     },
 };
