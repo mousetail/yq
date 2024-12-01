@@ -45,8 +45,8 @@
     </div>
   </div>
   <div class="lang-list">
-    {% for lang in languages() %}
-      <a href="/{{ object.challenge.id }}/{{ lang.name }}" class="lang">{{ lang.name }}</a>
+    {% for lang, _ in languages() %}
+      <a href="/{{ object.challenge.id }}/{{ lang }}" class="lang">{{ lang }}</a>
     {% endfor %}
   </div>
   <form method="post">

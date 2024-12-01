@@ -41,11 +41,7 @@ pub async fn solution_invalidation_task(pool: PgPool) {
                 }
             };
 
-            let version = LANGS
-                .iter()
-                .find(|i| i.name == task.language)
-                .unwrap()
-                .latest_version;
+            let version = LANGS.get(&task.language).unwrap().latest_version;
 
             let result = match test_solution(&task.code, &task.language, version, &task.judge).await
             {

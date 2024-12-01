@@ -116,8 +116,7 @@ pub async fn new_solution(
         .unwrap();
 
     let version = LANGS
-        .iter()
-        .find(|i| i.name == language_name)
+        .get(&language_name)
         .ok_or(Error::NotFound)?
         .latest_version;
 

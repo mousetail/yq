@@ -54,7 +54,7 @@ async fn install_lang(
     version: &str,
     versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<(), RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
+    let lang = LANGS.get(&lang_name).unwrap();
 
     let lang_version_token = versions.get(lang.name.to_owned());
     let lang_versions = lang_version_token
@@ -94,8 +94,8 @@ async fn run_lang(
     judge_lang: &str,
     judge_version: &str,
 ) -> Result<RunLangOutput, RunProcessError> {
-    let lang = LANGS.iter().find(|k| k.name == lang_name).unwrap();
-    let judge_lang = LANGS.iter().find(|k| k.name == judge_lang).unwrap();
+    let lang = LANGS.get(lang_name).unwrap();
+    let judge_lang = LANGS.get(judge_lang).unwrap();
 
     let code_lang_folder = get_lang_directory(lang, version).await?;
     let judge_lang_folder = get_lang_directory(judge_lang, judge_version).await?;
@@ -220,11 +220,7 @@ pub async fn process_message(
     message: Message,
     lang_versions: &CacheMap<String, CacheMap<String, ()>>,
 ) -> Result<RunLangOutput, RunLangError> {
-    let deno_latest_version = LANGS
-        .iter()
-        .find(|k| k.name == "deno")
-        .unwrap()
-        .latest_version;
+    let deno_latest_version = LANGS.get("deno").unwrap().latest_version;
 
     // Runner Lang
     install_lang("deno".to_owned(), deno_latest_version, lang_versions)

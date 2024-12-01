@@ -1,3 +1,4 @@
+use phf::phf_map;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -12,8 +13,8 @@ pub struct Lang {
     pub latest_version: &'static str,
 }
 
-pub const LANGS: &[Lang] = &[
-    Lang {
+pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
+    "nodejs" => Lang {
         name: "nodejs",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/node", "${FILE_LOCATION}"],
@@ -22,7 +23,7 @@ pub const LANGS: &[Lang] = &[
         install_env: &[],
         latest_version: "22.9.0",
     },
-    Lang {
+    "deno" => Lang {
         name: "deno",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/deno", "--allow-write=/tmp", "--allow-run", "--allow-read", "${FILE_LOCATION}"],
@@ -35,7 +36,7 @@ pub const LANGS: &[Lang] = &[
         install_env: &[],
         latest_version: "2.0.6",
     },
-    Lang {
+    "python" => Lang {
         name: "python",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/python", "${FILE_LOCATION}"],
@@ -44,7 +45,7 @@ pub const LANGS: &[Lang] = &[
         install_env: &[],
         latest_version: "3.12.0",
     },
-    Lang {
+    "rust" => Lang {
         name: "rust",
         compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}"],
         run_command: &["${OUTPUT_LOCATION}"],
@@ -59,7 +60,7 @@ pub const LANGS: &[Lang] = &[
         )],
         latest_version: "1.82.0",
     },
-    Lang {
+    "vyxal" => Lang {
         name: "vyxal",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/vyxal2", "${FILE_LOCATION}", "'□'"],
@@ -68,7 +69,7 @@ pub const LANGS: &[Lang] = &[
         install_env: &[],
         latest_version: "2.22.4.3",
     },
-    Lang {
+    "tinyapl" => Lang {
         name: "tinyapl",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/tinyapl", "${FILE_LOCATION}"],
@@ -77,4 +78,4 @@ pub const LANGS: &[Lang] = &[
         install_env: &[],
         latest_version: "0.11.0.1",
     },
-];
+};
