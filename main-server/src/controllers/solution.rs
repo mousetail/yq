@@ -132,7 +132,8 @@ pub async fn new_solution(
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 
-    let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
+    let previous_solution_invalid =
+        !test_result.tests.pass && previous_code.as_ref().is_some_and(|e| !e.valid);
 
     let status = if test_result.tests.pass {
         // Currently the web browser turns all line breaks into "\r\n" when a solution
