@@ -95,8 +95,16 @@ impl Default for NewChallenge {
             .to_string(),
             judge: concat!(
                 "(async function*(context: Context): Challenge {\n",
-                "  yield (await context.run(undefined)).assertEquals('Hello World!');\n",
-                "  //Your code here\n",
+                "  // Single Test\n",
+                "  yield (await context.run(undefined)).assertEquals('Hello World!');\n\n",
+                "  // Automatically shuffle and deal test cases over multiple runs\n",
+                "  for await (const  value of context.runTestCases(\n",
+                "    [\n",
+                "        [\"Input\", \"Expected Output\"],\n",
+                "    ]\n",
+                "  )) {\n",
+                "    yield value;\n",
+                "  }\n",
                 "  return context.noFailures();\n",
                 "})"
             )

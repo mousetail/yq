@@ -22,6 +22,7 @@ pub struct AllSolutionsOutput {
     tests: Option<RunLangOutput>,
     code: Option<String>,
     previous_solution_invalid: bool,
+    language: String,
 }
 
 pub async fn all_solutions(
@@ -54,6 +55,7 @@ pub async fn all_solutions(
             tests: None,
             previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
             code: code.map(|d| d.code),
+            language: language_name,
         },
         "challenge.html.jinja",
         format,
@@ -116,8 +118,7 @@ pub async fn new_solution(
         .unwrap();
 
     let version = LANGS
-        .iter()
-        .find(|i| i.name == language_name)
+        .get(&language_name)
         .ok_or(Error::NotFound)?
         .latest_version;
 
@@ -131,7 +132,8 @@ pub async fn new_solution(
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 
-    let previous_solution_invalid = previous_code.as_ref().is_some_and(|e| !e.valid);
+    let previous_solution_invalid =
+        !test_result.tests.pass && previous_code.as_ref().is_some_and(|e| !e.valid);
 
     let status = if test_result.tests.pass {
         // Currently the web browser turns all line breaks into "\r\n" when a solution
@@ -203,6 +205,7 @@ pub async fn new_solution(
             .await,
             tests: Some(test_result),
             code: Some(solution.code),
+            language: language_name,
             previous_solution_invalid,
         },
         "challenge.html.jinja",

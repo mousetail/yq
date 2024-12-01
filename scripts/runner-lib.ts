@@ -91,6 +91,13 @@ export class RunResult extends StringResult {
     }
 }
 
+export type TestCasesOptions = {
+    inputSeperator: string,
+    outputSeperator: string,
+    numberOfRuns: number,
+    shuffle: boolean
+}
+
 export class Context {
     public code: string;
     private onRunCallback: (code: string, input: string | undefined) => Promise<RunCompiledCodeResult>;
@@ -102,6 +109,37 @@ export class Context {
         this.code = code;
         this.onRunCallback = onRunCallback;
         this.testCases = [];
+    }
+
+    async* runTestCases(testCases: [string, string][], overrideOptions: Partial<TestCasesOptions> = {}): AsyncIterator<TestCase> {
+        const options: TestCasesOptions = {
+            inputSeperator: '\n',
+            outputSeperator: '\n',
+            numberOfRuns: 2,
+            shuffle: true,
+            ...overrideOptions
+        }   
+        if (options.shuffle) {
+            shuffle(testCases);
+        }
+
+        // Ensure the runs are uneven
+        // This is mostly to prevent people from hardcoding the length of the input
+        const cardsPerHand = testCases.length / (options.numberOfRuns + 1);
+        const hands = [testCases.slice(0, Math.floor(cardsPerHand * 2))];
+        for (let i=cardsPerHand*2; i<testCases.length; i+=cardsPerHand) {
+            hands.push(testCases.slice(Math.floor(i), Math.floor(i+cardsPerHand)+1));
+        }
+
+        // TODO: When running code becomes thread safe, this should run in paralel
+        for (const hand of hands) {
+            if (hand.length === 0) {
+                continue;
+            }
+            yield (await this.run(hand.map(i=>i[0]).join(options.inputSeperator))).assertEquals(
+                hand.map(i=>i[1]).join(options.outputSeperator)
+            )
+        }
     }
 
     async run(input?: string | undefined): Promise<RunResult> {

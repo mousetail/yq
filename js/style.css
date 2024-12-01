@@ -61,7 +61,7 @@ header {
   align-items: center;
 }
 
-.header-content>div {
+.header-content > div {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -82,7 +82,7 @@ main {
   max-width: 65ch;
 }
 
-.content li+li {
+.content li + li {
   margin-top: 0.6rem;
 }
 
@@ -101,7 +101,7 @@ main {
   padding: 0.6rem;
 }
 
-#challenges li+li {
+#challenges li + li {
   border-top: 3px solid var(--light-border);
 }
 
@@ -176,7 +176,7 @@ textarea:focus-within {
   }
 }
 
-.leaderboard table tr:not(:last-child)>td {
+.leaderboard table tr:not(:last-child) > td {
   border-bottom: 1px solid black;
 }
 
@@ -232,4 +232,19 @@ button {
 
 .validation-error {
   color: red;
+}
+
+.lang > img {
+  vertical-align: middle;
+}
+
+.lang {
+  padding: 0.3rem;
+  border-radius: 0.5rem;
+}
+
+.lang.active {
+  background-color: white;
+  filter: invert(1);
+  text-decoration: none;
 }
