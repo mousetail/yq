@@ -22,6 +22,7 @@ pub struct AllSolutionsOutput {
     tests: Option<RunLangOutput>,
     code: Option<String>,
     previous_solution_invalid: bool,
+    language: String,
 }
 
 pub async fn all_solutions(
@@ -54,6 +55,7 @@ pub async fn all_solutions(
             tests: None,
             previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
             code: code.map(|d| d.code),
+            language: language_name,
         },
         "challenge.html.jinja",
         format,
@@ -202,6 +204,7 @@ pub async fn new_solution(
             .await,
             tests: Some(test_result),
             code: Some(solution.code),
+            language: language_name,
             previous_solution_invalid,
         },
         "challenge.html.jinja",

@@ -45,8 +45,13 @@
     </div>
   </div>
   <div class="lang-list">
-    {% for lang, _ in languages() %}
-      <a href="/{{ object.challenge.id }}/{{ lang }}" class="lang">{{ lang }}</a>
+    {% for lang, lang_data in languages() %}
+      <a href="/{{ object.challenge.id }}/{{ lang }}"
+         class="lang
+                {% if object.language == lang %}active{% endif %}">
+        <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="">
+        {{ lang }}
+      </a>
     {% endfor %}
   </div>
   <form method="post">
