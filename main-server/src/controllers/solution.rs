@@ -123,8 +123,7 @@ pub async fn new_solution(
 
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
         .await?
-        .ok_or(Error::NotFound)
-        .unwrap();
+        .ok_or(Error::NotFound)?;
 
     let test_result = test_solution(
         &solution.code,
@@ -133,6 +132,7 @@ pub async fn new_solution(
         &challenge.challenge.challenge.judge,
     )
     .await?;
+
     let previous_code =
         Code::get_best_code_for_user(&pool, account.id, challenge_id, &language_name).await;
 
@@ -150,7 +150,15 @@ pub async fn new_solution(
         match previous_code {
             None => {
                 sqlx::query!(
-                    "INSERT INTO solutions (language, version, challenge, code, author, score, last_improved_date) values ($1, $2, $3, $4, $5, $6, $7)",
+                    "INSERT INTO solutions (
+                        language,
+                        version,
+                        challenge, 
+                        code,
+                        author, 
+                        score, 
+                        last_improved_date
+                    ) values ($1, $2, $3, $4, $5, $6, $7)",
                     language_name,
                     version,
                     challenge_id,
@@ -161,7 +169,7 @@ pub async fn new_solution(
                 )
                 .execute(&pool)
                 .await
-                .map_err(|_| Error::ServerError)?;
+                .map_err(Error::Database)?;
 
                 StatusCode::CREATED
             }
@@ -189,11 +197,15 @@ pub async fn new_solution(
                 )
                 .execute(&pool)
                 .await
-                .map_err(|_| Error::ServerError)?;
+                .map_err(Error::Database)?;
 
                 StatusCode::CREATED
             }
-            Some(_) => StatusCode::OK,
+            Some(_) => {
+                // This means the code passed but is not better than the previously saved solution
+                // So we don't save
+                StatusCode::OK
+            },
         }
     } else {
         StatusCode::BAD_REQUEST
