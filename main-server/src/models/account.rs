@@ -11,7 +11,7 @@ use serde::Serialize;
 use sqlx::{prelude::FromRow, PgPool};
 use tower_sessions::Session;
 
-use crate::controllers::auth::ACCOUNT_ID_KEY;
+use crate::{controllers::auth::ACCOUNT_ID_KEY, error::Error};
 
 #[derive(FromRow, Serialize)]
 pub struct Account {
@@ -32,6 +32,23 @@ impl Account {
         .fetch_optional(pool)
         .await
         .unwrap()
+    }
+
+    pub async fn save_preferred_language(
+        &self,
+        pool: &PgPool,
+        preferred_language: &str,
+    ) -> Result<(), Error> {
+        sqlx::query!(
+            "UPDATE accounts SET preferred_language=$1 WHERE id=$2",
+            preferred_language,
+            self.id
+        )
+        .execute(pool)
+        .await
+        .map_err(Error::Database)?;
+
+        Ok(())
     }
 }
 

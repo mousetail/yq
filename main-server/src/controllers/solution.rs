@@ -112,15 +112,19 @@ pub async fn new_solution(
     format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
-    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
-        .await?
-        .ok_or(Error::NotFound)
-        .unwrap();
-
     let version = LANGS
         .get(&language_name)
         .ok_or(Error::NotFound)?
         .latest_version;
+
+    account
+        .save_preferred_language(&pool, &language_name)
+        .await?;
+
+    let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
+        .await?
+        .ok_or(Error::NotFound)
+        .unwrap();
 
     let test_result = test_solution(
         &solution.code,
