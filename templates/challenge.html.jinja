@@ -6,10 +6,12 @@
   <h1>{{ object.challenge.name }}</h1>
   <p>
     A challenge by
-    <img src="{{ object.challenge.author_avatar }}&size=18"
-         alt="{{ object.challenge.author_name }} avatar"
-         height="18" />
-    {{ object.challenge.author_name }}
+    <a href="/user/{{ object.challenge.author }}">
+      <img src="{{ object.challenge.author_avatar }}&size=18"
+           alt="{{ object.challenge.author_name }} avatar"
+           height="18" />
+      {{ object.challenge.author_name }}
+    </a>
   </p>
   <div class="two-column-description">
     <div>

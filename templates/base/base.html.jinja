@@ -47,12 +47,14 @@
         </div>
         <div>
           {% if account %}
-            {{ account.username }}
-            <img src="{{ account.avatar }}&size=18"
-                 width="18"
-                 alt="{{ account.username }} profile picture" />
+            <a href="/user/{{ account.id }}">
+              {{ account.username }}
+              <img src="{{ account.avatar }}&size=18"
+                   width="18"
+                   alt="{{ account.username }} profile picture" />
+            </a>
           {% else %}
-            <a href="/login/github">Login</a>
+            <a href="/login/github">Join the Heist (with Github)</a>
           {% endif %}
         </div>
       </div>
