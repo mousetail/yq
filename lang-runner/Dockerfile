@@ -23,7 +23,9 @@ RUN apt-get update -y && apt-get install -y \
   libreadline-dev \
   libssl-dev \
   zip \
-  unzip
+  unzip \
+  # Temporary
+  nano
 
 RUN adduser yq
 

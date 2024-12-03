@@ -85,4 +85,17 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         latest_version: "0.11.1.0",
         icon: "tinyapl.svg"
     },
+    "tcc" => Lang {
+        name: "tcc",
+        compile_command: &[],
+        run_command: &["${LANG_LOCATION}/bin/tcc", "-run", "-B", "${LANG_LOCATION}/lib/tcc", "${FILE_LOCATION}"],
+        plugin: "https://github.com/mousetail/asdf-plugin-tcc.git",
+        env: &[
+            ("C_INCLUDE_PATH", "{LANG_LOCATION}/include"),
+            ("LIBRARY_PATH", "${LANG_LOCATION}/lib")
+        ],
+        install_env: &[],
+        latest_version: "0.9.27",
+        icon: "c.svg"
+    }
 };
