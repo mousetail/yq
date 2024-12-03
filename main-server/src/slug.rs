@@ -1,4 +1,4 @@
-use std::fmt::{Display, Write};
+use std::fmt::Display;
 
 pub struct Slug<'a>(pub &'a str);
 
