@@ -21,9 +21,9 @@ static RUNS_SEMAPHORE: tokio::sync::Semaphore =
     tokio::sync::Semaphore::const_new(MAX_CONCURRENT_RUNS);
 
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
-    println!("Installing language version {}", lang.name);
+    println!("Installing language version {}", lang.display_name);
     let plugin_install_output = Command::new("asdf")
-        .args(["plugin", "add", lang.name, lang.plugin])
+        .args(["plugin", "add", lang.display_name, lang.plugin])
         .stderr(Stdio::inherit())
         .status()
         .await?;
@@ -36,9 +36,12 @@ async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessE
 }
 
 async fn install_language_version(lang: &Lang, version: &str) -> Result<(), RunProcessError> {
-    println!("Installing language version {} {}", lang.name, version);
+    println!(
+        "Installing language version {} {}",
+        lang.display_name, version
+    );
     let status = Command::new("asdf")
-        .args(["install", lang.name, version])
+        .args(["install", lang.plugin_name, version])
         .stderr(Stdio::inherit())
         .status()
         .await?;
@@ -56,7 +59,7 @@ async fn install_lang(
 ) -> Result<(), RunProcessError> {
     let lang = LANGS.get(&lang_name).unwrap();
 
-    let lang_version_token = versions.get(lang.name.to_owned());
+    let lang_version_token = versions.get(lang.plugin_name.to_owned());
     let lang_versions = lang_version_token
         .get_or_try_init(|| install_plugin(lang))
         .await?;
@@ -72,7 +75,7 @@ async fn install_lang(
 
 async fn get_lang_directory(lang: &Lang, version: &str) -> Result<PathBuf, RunProcessError> {
     let lang_folder = Command::new("asdf")
-        .args(["where", lang.name, version])
+        .args(["where", lang.plugin_name, version])
         .stderr(Stdio::inherit())
         .output()
         .await?;

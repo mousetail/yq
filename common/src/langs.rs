@@ -4,7 +4,8 @@ use serde::Serialize;
 #[derive(Serialize)]
 #[serde(rename_all(serialize = "camelCase"))]
 pub struct Lang {
-    pub name: &'static str,
+    pub plugin_name: &'static str,
+    pub display_name: &'static str,
     pub compile_command: &'static [&'static str],
     pub run_command: &'static [&'static str],
     pub plugin: &'static str,
@@ -16,7 +17,8 @@ pub struct Lang {
 
 pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     "nodejs" => Lang {
-        name: "nodejs",
+        plugin_name: "nodejs",
+        display_name: "JavaScript (NodeJS)",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/node", "${FILE_LOCATION}"],
         plugin: "https://github.com/asdf-vm/asdf-nodejs.git",
@@ -26,7 +28,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "nodejs.svg"
     },
     "deno" => Lang {
-        name: "deno",
+        plugin_name: "deno",
+        display_name: "JavaScript (Deno)",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/deno", "--allow-write=/tmp", "--allow-run", "--allow-read", "${FILE_LOCATION}"],
         //run_command: &["/usr/bin/env"],
@@ -40,7 +43,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "deno.svg"
     },
     "python" => Lang {
-        name: "python",
+        plugin_name: "python",
+        display_name: "Python",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/python", "${FILE_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-python.git",
@@ -50,7 +54,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "python.svg"
     },
     "rust" => Lang {
-        name: "rust",
+        plugin_name: "rust",
+        display_name: "Rust",
         compile_command: &["${LANG_LOCATION}/bin/rustc", "${FILE_LOCATION}", "-o", "${OUTPUT_LOCATION}"],
         run_command: &["${OUTPUT_LOCATION}"],
         plugin: "https://github.com/asdf-community/asdf-rust.git",
@@ -66,7 +71,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "rust.svg"
     },
     "vyxal" => Lang {
-        name: "vyxal",
+        plugin_name: "vyxal",
+        display_name: "Vyxal",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/vyxal2", "${FILE_LOCATION}", "'□'"],
         plugin: "https://github.com/lyxal/vyxasdf.git",
@@ -76,7 +82,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "vyxal.svg"
     },
     "tinyapl" => Lang {
-        name: "tinyapl",
+        plugin_name: "tinyapl",
+        display_name: "APL (tinyapl)",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/tinyapl", "${FILE_LOCATION}"],
         plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
@@ -86,7 +93,8 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
         icon: "tinyapl.svg"
     },
     "tcc" => Lang {
-        name: "tcc",
+        plugin_name: "tcc",
+        display_name: "C (tcc)",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/tcc", "-run", "-B", "${LANG_LOCATION}/lib/tcc", "${FILE_LOCATION}"],
         plugin: "https://github.com/mousetail/asdf-plugin-tcc.git",

@@ -52,7 +52,7 @@
          class="lang
                 {% if object.language == lang %}active{% endif %}">
         <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="">
-        {{ lang }}
+        {{ lang_data.displayName }}
       </a>
     {% endfor %}
   </div>

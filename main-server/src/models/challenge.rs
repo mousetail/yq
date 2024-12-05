@@ -78,9 +78,9 @@ impl NewChallenge {
             errors.insert("category", "can't change the category of a live challenge");
         }
         if errors.is_empty() {
-            return Ok(());
+            Ok(())
         } else {
-            return Err(errors);
+            Err(errors)
         }
     }
 }
