@@ -1,5 +1,5 @@
 {% macro test_cases(cases) %}
-  <pre style="whitepspace: pre-wrap">
+  <pre style="white-space: pre-wrap;">
   {{ cases | json_encode }}
   </pre>
   <hr>
@@ -9,14 +9,14 @@
     Fail
   {% endif %}
   <div class="time-out-warning warning
-              {% if not cases.timed_out %}hidden{% endif %}">Code timed out after 3 seconds</div>
+              {% if not cases.timedOut %}hidden{% endif %}">Code timed out after 3 seconds</div>
   <div class="judge-errors
-              {% if cases.judge_error %}
+              {% if cases.judgeError %}
               {% else %}
                 hidden
               {% endif %}">
     <h3>Judge Errors</h3>
-    <pre class="code-pre">{{ cases.judge_error }}</pre>
+    <pre class="code-pre">{{ cases.judgeError }}</pre>
   </div>
   <div class="test-cases">
     {% for test in cases.tests %}

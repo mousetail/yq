@@ -4,6 +4,7 @@ use common::{RunLangOutput, TestCase, TestPassState};
 use serde::Serialize;
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TestCaseDisplay {
     columns: Vec<Column>,
     title: Option<Cow<'static, str>>,
@@ -11,6 +12,7 @@ pub struct TestCaseDisplay {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Column {
     title: Option<Cow<'static, str>>,
     content: String,
@@ -63,6 +65,7 @@ impl TestCaseDisplay {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OutputDisplay {
     tests: Vec<TestCaseDisplay>,
     passed: bool,
