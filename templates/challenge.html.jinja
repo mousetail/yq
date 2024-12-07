@@ -83,5 +83,5 @@
       <button type="submit" disabled>Submit!</button>
     {% endif %}
   </form>
-  {% if object.tests %}{{ test_cases::test_cases(cases=object.tests) }}{% endif %}
+  {{ test_cases::test_cases(cases=object.tests) }}
 {% endblock content %}

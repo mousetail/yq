@@ -5,6 +5,7 @@ import { WorkerShape } from "@valtown/codemirror-ts/worker";
 import * as Comlink from "comlink";
 import { StateEffect } from "@codemirror/state";
 import "./style.css";
+import { renderResultDisplay } from "./test_case";
 
 function editorFromTextArea(
   textarea: HTMLTextAreaElement,
@@ -13,11 +14,6 @@ function editorFromTextArea(
   let view = new EditorView({ doc: textarea.value, extensions });
   textarea.parentNode?.insertBefore(view.dom, textarea);
   textarea.style.display = "none";
-  if (textarea.form) {
-    textarea.form.addEventListener("submit", () => {
-      textarea.value = view.state.doc.toString();
-    });
-  }
 
   return view;
 }
@@ -123,5 +119,40 @@ window.addEventListener("load", async () => {
   if (editorControls !== null) {
     console.log("editor controls exists");
     setupEditorControls(editorControls, mainTextArea!);
+
+    setupJsSubmitOnForm(mainTextArea!);
   }
 });
+
+/// Only works from the solutions page
+async function submitNewSolution(mainTextArea: EditorView) {
+  const content = mainTextArea.state.doc.toString();
+
+  const response = await fetch(window.location.href, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      code: content,
+    }),
+  });
+
+  // todo: Also render the leaderboard
+  const { tests } = await response.json();
+  const testsContainer = document.querySelector(
+    "div.result-display-wrapper"
+  ) as HTMLDivElement;
+  renderResultDisplay(tests, testsContainer);
+}
+
+function setupJsSubmitOnForm(mainTextArea: EditorView) {
+  const form = document.querySelector("form");
+
+  form.addEventListener("submit", (ev) => {
+    ev.preventDefault();
+
+    submitNewSolution(mainTextArea);
+  });
+}
