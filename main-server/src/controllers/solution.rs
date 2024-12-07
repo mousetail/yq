@@ -1,5 +1,5 @@
 use axum::{extract::Path, http::StatusCode, response::Redirect, Extension};
-use common::{langs::LANGS, RunLangOutput};
+use common::langs::LANGS;
 use serde::Serialize;
 use sqlx::{query_scalar, types::time::OffsetDateTime, PgPool};
 
