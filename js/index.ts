@@ -5,7 +5,7 @@ import { WorkerShape } from "@valtown/codemirror-ts/worker";
 import * as Comlink from "comlink";
 import { StateEffect } from "@codemirror/state";
 import "./style.css";
-import { renderResultDisplay } from "./test_case";
+import { renderResultDisplay, ResultDisplay } from "./test_case";
 
 function editorFromTextArea(
   textarea: HTMLTextAreaElement,
@@ -65,7 +65,7 @@ const setupEditorControls = (
   const byteCountElement = editorControls.querySelector("#byte-counter")!;
   const resetButton = editorControls.querySelector("#restore-solution-button")!;
   const textEncoder = new TextEncoder();
-  const originalText = mainTextArea.state.doc.toString();
+  let originalText = mainTextArea.state.doc.toString();
   const lengthInBytes = (s: string): number => textEncoder.encode(s).length;
 
   byteCountElement.textContent = lengthInBytes(originalText).toString();
@@ -90,6 +90,10 @@ const setupEditorControls = (
         insert: originalText,
       },
     });
+  });
+
+  setupJsSubmitOnForm(mainTextArea!, (e) => {
+    originalText = e;
   });
 };
 
@@ -117,42 +121,58 @@ window.addEventListener("load", async () => {
 
   let editorControls = document.getElementById("editor-controls");
   if (editorControls !== null) {
-    console.log("editor controls exists");
     setupEditorControls(editorControls, mainTextArea!);
-
-    setupJsSubmitOnForm(mainTextArea!);
   }
 });
 
 /// Only works from the solutions page
-async function submitNewSolution(mainTextArea: EditorView) {
-  const content = mainTextArea.state.doc.toString();
+async function submitNewSolution(
+  mainTextArea: EditorView,
+  submitButton: HTMLButtonElement,
+  setOriginalText: (e: string) => void
+) {
+  submitButton.disabled = true;
+  try {
+    const content = mainTextArea.state.doc.toString();
 
-  const response = await fetch(window.location.href, {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      code: content,
-    }),
-  });
+    const response = await fetch(window.location.href, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        code: content,
+      }),
+    });
 
-  // todo: Also render the leaderboard
-  const { tests } = await response.json();
-  const testsContainer = document.querySelector(
-    "div.result-display-wrapper"
-  ) as HTMLDivElement;
-  renderResultDisplay(tests, testsContainer);
+    // todo: Also render the leaderboard
+    const { tests } = (await response.json()) as { tests: ResultDisplay };
+
+    if (tests.passed && response.status === 201) {
+      setOriginalText(content);
+    }
+    const testsContainer = document.querySelector(
+      "div.result-display-wrapper"
+    ) as HTMLDivElement;
+    renderResultDisplay(tests, testsContainer);
+  } finally {
+    submitButton.disabled = false;
+  }
 }
 
-function setupJsSubmitOnForm(mainTextArea: EditorView) {
+function setupJsSubmitOnForm(
+  mainTextArea: EditorView,
+  setOriginalText: (e: string) => void
+) {
   const form = document.querySelector("form");
+  const submitButton = form.querySelector(
+    "button[type='submit']"
+  ) as HTMLButtonElement;
 
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
 
-    submitNewSolution(mainTextArea);
+    submitNewSolution(mainTextArea, submitButton, setOriginalText);
   });
 }
