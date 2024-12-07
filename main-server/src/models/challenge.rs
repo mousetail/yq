@@ -4,7 +4,7 @@ use common::RunLangOutput;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-use crate::error::Error;
+use crate::{error::Error, test_case_display::OutputDisplay};
 
 #[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
@@ -148,7 +148,7 @@ impl Default for NewOrExistingChallenge {
 pub struct ChallengeWithTests {
     #[serde(flatten)]
     pub challenge: NewOrExistingChallenge,
-    pub tests: Option<RunLangOutput>,
+    pub tests: Option<OutputDisplay>,
     pub validation: Option<HashMap<&'static str, &'static str>>,
 }
 

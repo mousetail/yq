@@ -1,28 +1,60 @@
 {% macro test_cases(cases) %}
-  {% if cases.tests.pass %}
+  <pre style="whitepspace: pre-wrap">
+  {{ cases | json_encode }}
+  </pre>
+  <hr>
+  {% if cases.passed %}
     Pass
   {% else %}
     Fail
   {% endif %}
-  {% if cases.stderr %}
+  <div class="time-out-warning warning
+              {% if not cases.timed_out %}hidden{% endif %}">Code timed out after 3 seconds</div>
+  <div class="judge-errors
+              {% if cases.judge_error %}
+              {% else %}
+                hidden
+              {% endif %}">
     <h3>Judge Errors</h3>
-    <pre>{{ cases.stderr }}</pre>
-  {% endif %}
-  {% if cases.timedOut %}The process timed out after 3 seconds{% endif %}
-  {% for test in cases.tests.testCases %}
-    <div class="test-case test-{{- test.pass | lower }}">
-      {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}
-      {% if test.pass == "Pass" %}
-        Pass
-      {% elif test.pass == "Fail" %}
-        Fail
-      {% elif test.pass == "Warning" %}
-        Warning
-      {% elif test.pass == "Info" %}
-        Info
-      {% endif %}
-      {% if test.resultDisplay.Empty %}
-      {% elif test.resultDisplay.Text %}
+    <pre class="code-pre">{{ cases.judge_error }}</pre>
+  </div>
+  <div class="test-cases">
+    {% for test in cases.tests %}
+      <div class="test-case test-{{ test.status | lower }}">
+        <div class="test-case-header">
+          {% if test.title %}<h2 class="test-case-title">{{ test.title }}</h2>{% endif %}
+          <div class="test-case-status">{{ test.status }}</div>
+        </div>
+        <div class="test-case-content">
+          <div class="test-case-columns test-case-{{ test.columns | length }}-columns">
+            {% for column in test.columns %}
+              <div class="test-case-column">
+                {% if column.title %}<h3>{{ column.title }}</h3>{% endif %}
+                <pre class="code-pre">
+                  {{- column.content -}}
+                </pre>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {#
+        {% for test in cases.tests.testCases %}
+          <div class="test-case test-{{- test.pass | lower }}">
+            {% if test.name %}<h2>{{ test.name }}</h2>{% endif %}
+            {% if test.pass == "Pass" %}
+              Pass
+            {% elif test.pass == "Fail" %}
+              Fail
+            {% elif test.pass == "Warning" %}
+              Warning
+            {% elif test.pass == "Info" %}
+              Info
+            {% endif %}
+            {% if test.resultDisplay.Empty %}
+            {% elif test.resultDisplay.Text %}
         <div class="results">{{ test.resultDisplay.Text }}</div>
       {% elif test.resultDisplay.Diff %}
         <div class="diff">
@@ -37,7 +69,9 @@
         </div>
       {% elif test.resultDisplay.Run %}
         <div class="diff
-                    {% if test.resultDisplay.Run.input and test.resultDisplay.Run.input != '' %}diff-three-column{% endif %}">
+                    {% if test.resultDisplay.Run.input and test.resultDisplay.Run.input != '' %}
+                      diff-three-column
+                    {% endif %}">
           {% if test.resultDisplay.Run.input and test.resultDisplay.Run.input != '' %}
             <div class="column">
               <h3>Input</h3>
@@ -55,5 +89,5 @@
         </div>
       {% endif %}
     </div>
-  {% endfor %}
+  {% endfor %} #}
 {% endmacro test_cases %}

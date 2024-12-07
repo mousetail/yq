@@ -12,6 +12,7 @@ use crate::{
         solutions::{Code, LeaderboardEntry, NewSolution},
     },
     slug::Slug,
+    test_case_display::OutputDisplay,
     test_solution::test_solution,
 };
 
@@ -19,7 +20,7 @@ use crate::{
 pub struct AllSolutionsOutput {
     challenge: ChallengeWithAuthorInfo,
     leaderboard: Vec<LeaderboardEntry>,
-    tests: Option<RunLangOutput>,
+    tests: Option<OutputDisplay>,
     code: Option<String>,
     previous_solution_invalid: bool,
     language: String,
@@ -219,7 +220,7 @@ pub async fn new_solution(
                 &language_name,
             )
             .await,
-            tests: Some(test_result),
+            tests: Some(test_result.into()),
             code: Some(solution.code),
             language: language_name,
             previous_solution_invalid,

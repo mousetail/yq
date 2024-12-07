@@ -158,7 +158,7 @@ pub async fn new_challenge(
         return Ok(AutoOutputFormat::new(
             ChallengeWithTests {
                 challenge: new_challenge,
-                tests: Some(tests),
+                tests: Some(tests.into()),
                 validation: None,
             },
             "submit_challenge.html.jinja",
@@ -233,7 +233,7 @@ pub async fn new_challenge(
             Ok(AutoOutputFormat::new(
                 ChallengeWithTests {
                     challenge: new_challenge,
-                    tests: Some(tests),
+                    tests: Some(tests.into()),
                     validation: None,
                 },
                 "submit_challenge.html.jinja",

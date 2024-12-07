@@ -127,17 +127,6 @@ textarea:focus-within {
   border: 1px solid #27534a;
 }
 
-.test-case {
-  margin-bottom: 1rem;
-  padding: 1rem;
-}
-
-.test-case pre {
-  background-color: white;
-  padding: 1rem;
-  overflow-x: auto;
-}
-
 .test-pass {
   background-color: #7dca8c;
 }
@@ -152,16 +141,6 @@ textarea:focus-within {
 
 .test-info {
   background-color: #ddd;
-}
-
-.diff {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.diff-three-column {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 @media (min-width: 1000px) {
@@ -247,4 +226,46 @@ button {
   background-color: white;
   filter: invert(1);
   text-decoration: none;
+}
+
+/* Test Case Related */
+.test-case-header {
+  display: flex;
+  justify-content: end;
+  height: 3rem;
+}
+
+.test-case-title {
+  flex-grow: 1;
+}
+
+.test-case-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.test-case-1-columns {
+  --columns: 1;
+}
+
+.test-case-2-columns {
+  --columns: 2;
+}
+
+.test-case-3-columns {
+  --columns: 3;
+}
+
+.test-case {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+}
+
+.code-pre {
+  background-color: white;
+  padding: 1rem;
+  overflow-x: auto;
+  height: 15rem;
+  overflow-y: auto;
 }
