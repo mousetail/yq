@@ -1,6 +1,6 @@
 import { stat } from "node:fs";
 
-type ResultDisplay = {
+export type ResultDisplay = {
   judgeError: null | string;
   passed: boolean;
   tests: Test[];
