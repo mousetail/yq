@@ -46,10 +46,10 @@
       </table>
     </div>
   </div>
-  <div class="lang-list">
+  <div class="lang-list tabs">
     {% for lang, lang_data in languages() %}
       <a href="/{{ object.challenge.id }}/{{ lang }}"
-         class="lang
+         class="lang tab
                 {% if object.language == lang %}active{% endif %}">
         <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="">
         {{ lang_data.displayName }}

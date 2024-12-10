@@ -215,17 +215,34 @@ button {
 
 .lang > img {
   vertical-align: middle;
+  width: 32px;
+  height: 32px;
 }
 
-.lang {
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background-color: #b3e5cc;
+  border: 2px solid #b3e5cc;
+  border-bottom: 2px solid #15b866;
   padding: 0.3rem;
-  border-radius: 0.5rem;
+
+  &:not(:first-child) {
+    border-left: 2px solid #8bd9b2;
+  }
 }
 
-.lang.active {
-  background-color: white;
-  filter: invert(1);
-  text-decoration: none;
+.tab.active {
+  background-color: hsl(var(--main-hue) 60% 90%);
+  border: 2px solid #15b866;
+  border-bottom: 2px solid hsl(var(--main-hue) 60% 90%);
+
+  & + .tab {
+    border-left-color: #b3e5cc;
+  }
 }
 
 /* Test Case Related */
