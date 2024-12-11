@@ -23,6 +23,7 @@ use controllers::{
     },
     user::get_user,
 };
+use discord_bot::{init_bot, Bot};
 use solution_invalidation::solution_invalidation_task;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
@@ -70,6 +71,20 @@ async fn main() -> anyhow::Result<()> {
 
     let _invalidation_task = tokio::task::spawn(solution_invalidation_task(pool.clone()));
 
+    // Bot
+    let bot = if let Some((token, channel_id)) = std::env::var("DISCORD_TOKEN")
+        .ok()
+        .zip(std::env::var("DISCORD_CHANNEL_ID").ok())
+    {
+        let channel = init_bot(pool.clone(), token, channel_id.parse().unwrap());
+        Bot {
+            channel: Some(channel),
+        }
+    } else {
+        eprint!("Not starting discord bot because environment variables DISCORD_TOKEN or DISCORD_CHANNEL_ID not found");
+        Bot { channel: None }
+    };
+
     let app = Router::new()
         .route("/", get(all_challenges))
         .nest_service(
@@ -101,6 +116,7 @@ async fn main() -> anyhow::Result<()> {
         .fallback(get(strip_trailing_slashes))
         .layer(tower_http::catch_panic::CatchPanicLayer::new())
         .layer(Extension(pool))
+        .layer(Extension(bot))
         .layer(session_layer);
 
     let listener = tokio::net::TcpListener::bind(&format!(

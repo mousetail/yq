@@ -53,7 +53,7 @@ impl Code {
     }
 }
 
-#[derive(sqlx::FromRow, Deserialize, Serialize)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, Debug)]
 pub struct LeaderboardEntry {
     pub id: i32,
     pub author_id: i32,
@@ -63,11 +63,37 @@ pub struct LeaderboardEntry {
 }
 
 impl LeaderboardEntry {
+    pub async fn get_top_entry(
+        pool: &PgPool,
+        challenge_id: i32,
+        language: &str,
+    ) -> Result<Option<LeaderboardEntry>, sqlx::Error> {
+        sqlx::query_as!(
+            LeaderboardEntry,
+            "
+        SELECT
+            solutions.id as id,
+            solutions.author as author_id,
+            accounts.username as author_name,
+            accounts.avatar as author_avatar,
+            score FROM solutions
+        LEFT JOIN accounts ON solutions.author = accounts.id
+        WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
+        ORDER BY solutions.score ASC, last_improved_date ASC
+        LIMIT 1
+        ",
+            challenge_id,
+            language
+        )
+        .fetch_optional(pool)
+        .await
+    }
+
     pub async fn get_leadeboard_for_challenge_and_language(
         pool: &PgPool,
         challenge_id: i32,
         language: &str,
-    ) -> Vec<Self> {
+    ) -> Result<Vec<Self>, sqlx::Error> {
         sqlx::query_as!(
             LeaderboardEntry,
             "
@@ -86,7 +112,6 @@ impl LeaderboardEntry {
         )
         .fetch_all(pool)
         .await
-        .unwrap()
     }
 }
 

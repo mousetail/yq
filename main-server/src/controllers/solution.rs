@@ -1,10 +1,13 @@
+
 use axum::{extract::Path, http::StatusCode, response::Redirect, Extension};
 use common::langs::LANGS;
+use discord_bot::Bot;
 use serde::Serialize;
 use sqlx::{query_scalar, types::time::OffsetDateTime, PgPool};
 
 use crate::{
     auto_output_format::{AutoInput, AutoOutputFormat, Format},
+    discord::post_updated_score,
     error::Error,
     models::{
         account::Account,
@@ -37,7 +40,8 @@ pub async fn all_solutions(
         challenge_id,
         &language_name,
     )
-    .await;
+    .await
+    .map_err(Error::Database)?;
 
     let challenge = ChallengeWithAuthorInfo::get_by_id(&pool, challenge_id)
         .await?
@@ -110,6 +114,7 @@ pub async fn new_solution(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
     account: Account,
     Extension(pool): Extension<PgPool>,
+    Extension(bot): Extension<Bot>,
     format: Format,
     AutoInput(solution): AutoInput<NewSolution>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
@@ -172,6 +177,10 @@ pub async fn new_solution(
                 .await
                 .map_err(Error::Database)?;
 
+                tokio::spawn(
+                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score)
+                );
+
                 StatusCode::CREATED
             }
             Some(w) if
@@ -200,6 +209,10 @@ pub async fn new_solution(
                 .await
                 .map_err(Error::Database)?;
 
+                tokio::spawn(
+                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score)
+                );
+
                 StatusCode::CREATED
             }
             Some(_) => {
@@ -219,7 +232,8 @@ pub async fn new_solution(
                 challenge_id,
                 &language_name,
             )
-            .await,
+            .await
+            .map_err(Error::Database)?,
             tests: Some(test_result.into()),
             code: Some(solution.code),
             language: language_name,

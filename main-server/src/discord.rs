@@ -1,10 +1,12 @@
 use std::env::VarError;
 
+use discord_bot::{Bot, ScoreImproved};
 use reqwest::StatusCode;
 use serde::Serialize;
+use sqlx::PgPool;
 
 use crate::{
-    models::{account::Account, challenge::NewOrExistingChallenge},
+    models::{account::Account, challenge::NewOrExistingChallenge, solutions::LeaderboardEntry},
     slug::Slug,
 };
 
@@ -106,4 +108,31 @@ pub async fn post_new_golfer(account: Account) {
             eprintln!("{e:?}");
         }
     };
+}
+
+pub async fn post_updated_score(
+    pool: PgPool,
+    bot: Bot,
+    challenge_id: i32,
+    author: i32,
+    language: String,
+    score: i32,
+) {
+    let top_solution = match LeaderboardEntry::get_top_entry(&pool, challenge_id, &language).await {
+        Ok(o) => o,
+        Err(e) => {
+            eprintln!("Failed to get top solution: {e:?}");
+            return;
+        }
+    };
+    println!("Best solution: {top_solution:?}");
+    if top_solution.is_none_or(|k| k.score == score && k.author_id == author) {
+        bot.send(ScoreImproved {
+            challenge_id,
+            author,
+            language,
+            score,
+        })
+        .await;
+    }
 }
