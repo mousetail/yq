@@ -135,7 +135,6 @@ pub async fn post_updated_score(
             return;
         }
     };
-    println!("Best solution: {top_solution:?}");
     if top_solution.is_none_or(|k| k.score == score && k.author_id == author) {
         bot.send(ScoreImproved {
             challenge_id,

@@ -299,7 +299,6 @@ pub fn init_bot(pool: PgPool, discord_token: String, channel_id: u64) -> Sender<
 
     let channel = ChannelId::new(channel_id);
 
-    println!("init bot called");
     tokio::spawn(handle_bot_queue(receiver, http_client, pool, channel));
 
     return sender;
