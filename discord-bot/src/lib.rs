@@ -1,3 +1,4 @@
+use common::langs::LANGS;
 use serenity::all::{
     ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
 };
@@ -43,7 +44,10 @@ fn format_message(
     let mut embed = CreateEmbed::new()
         .title(format!(
             "Improved score for {challenge_name} in {}",
-            new_message.language
+            LANGS
+                .get(&new_message.language)
+                .map(|d| d.display_name)
+                .unwrap_or(&new_message.language)
         ))
         .author(
             CreateEmbedAuthor::new(&author.username)
