@@ -286,3 +286,7 @@ button {
   height: 15rem;
   overflow-y: auto;
 }
+
+.lang-icon {
+  vertical-align: middle;
+}
