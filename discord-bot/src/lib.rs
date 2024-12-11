@@ -1,12 +1,8 @@
-use serenity::all::{ChannelId, CreateEmbed, CreateMessage, EditMessage, MessageId};
+use serenity::all::{
+    ChannelId, CreateEmbed, CreateEmbedAuthor, CreateMessage, EditMessage, MessageId,
+};
 use sqlx::PgPool;
 use tokio::sync::mpsc::{Receiver, Sender};
-
-// impl Bot {
-//     fn notify_best_score_changed(&self) {
-//         self.client.
-//     }
-// }
 
 pub struct ScoreImproved {
     pub challenge_id: i32,
@@ -31,20 +27,32 @@ struct LastMessage {
     channel_id: i64,
 }
 
+struct BasicAccontInfo {
+    username: String,
+    avatar: String,
+}
+
 fn format_message(
     previous_message: &Option<LastMessage>,
     new_message: &ScoreImproved,
     challenge_name: &str,
-    author_name: &str,
+    author: &BasicAccontInfo,
 ) -> CreateEmbed {
+    let public_url = std::env::var("YQ_PUBLIC_URL").unwrap();
+
     let mut embed = CreateEmbed::new()
         .title(format!(
             "Improved score for {challenge_name} in {}",
             new_message.language
         ))
+        .author(
+            CreateEmbedAuthor::new(&author.username)
+                .icon_url(&author.avatar)
+                .url(format!("{public_url}/user/{}", &new_message.author)),
+        )
         .url(format!(
             "{}/challenge/{}/{}/solve/{}",
-            std::env::var("YQ_PUBLIC_URL").unwrap(),
+            public_url,
             new_message.challenge_id,
             slug::slugify(challenge_name),
             new_message.language
@@ -62,9 +70,9 @@ fn format_message(
         } else {
             (previous.author_name.clone(), previous.score)
         };
-        embed = embed.field(previous_author, format!("{}", previous_score), false);
+        embed = embed.field(previous_author, format!("{}", previous_score), true);
     }
-    embed = embed.field(author_name, format!("{}", new_message.score), false);
+    embed = embed.field(&author.username, format!("{}", new_message.score), true);
 
     embed
 }
@@ -210,8 +218,9 @@ async fn handle_bot_queue(
                 continue;
             }
         };
-        let author_name = match sqlx::query_scalar!(
-            "SELECT username
+        let author_name = match sqlx::query_as!(
+            BasicAccontInfo,
+            "SELECT username, avatar
             FROM accounts
             WHERE id=$1
             ",
