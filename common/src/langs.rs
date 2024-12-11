@@ -83,7 +83,7 @@ pub const LANGS: phf::Map<&'static str, Lang> = phf_map! {
     },
     "tinyapl" => Lang {
         plugin_name: "tinyapl",
-        display_name: "APL (tinyapl)",
+        display_name: "APL (TinyAPL)",
         compile_command: &[],
         run_command: &["${LANG_LOCATION}/bin/tinyapl", "${FILE_LOCATION}"],
         plugin: "https://github.com/RubenVerg/asdf-tinyapl.git",
