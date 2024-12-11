@@ -1,8 +1,4 @@
-
-use serenity::all::{
-        ChannelId, CreateEmbed, CreateMessage, EditMessage,
-        MessageId,
-    };
+use serenity::all::{ChannelId, CreateEmbed, CreateMessage, EditMessage, MessageId};
 use sqlx::PgPool;
 use tokio::sync::mpsc::{Receiver, Sender};
 
@@ -40,7 +36,10 @@ fn format_message(
     author_name: &str,
 ) -> CreateEmbed {
     let mut embed = CreateEmbed::new()
-        .title(format!("Improved score for {challenge_name}"))
+        .title(format!(
+            "Improved score for {challenge_name} in {}",
+            new_message.language
+        ))
         .url(format!(
             "{}/challenge/{}/{}/solve/{}",
             std::env::var("YQ_PUBLIC_URL").unwrap(),
