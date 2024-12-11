@@ -1,4 +1,3 @@
-
 use axum::{extract::Path, http::StatusCode, response::Redirect, Extension};
 use common::langs::LANGS;
 use discord_bot::Bot;
@@ -178,7 +177,7 @@ pub async fn new_solution(
                 .map_err(Error::Database)?;
 
                 tokio::spawn(
-                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score)
+                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
                 );
 
                 StatusCode::CREATED
@@ -210,7 +209,7 @@ pub async fn new_solution(
                 .map_err(Error::Database)?;
 
                 tokio::spawn(
-                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score)
+                    post_updated_score(pool.clone(), bot, challenge_id, account.id, language_name.clone(), new_score, challenge.challenge.challenge.status)
                 );
 
                 StatusCode::CREATED

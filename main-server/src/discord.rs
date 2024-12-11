@@ -6,7 +6,11 @@ use serde::Serialize;
 use sqlx::PgPool;
 
 use crate::{
-    models::{account::Account, challenge::NewOrExistingChallenge, solutions::LeaderboardEntry},
+    models::{
+        account::Account,
+        challenge::{ChallengeStatus, NewOrExistingChallenge},
+        solutions::LeaderboardEntry,
+    },
     slug::Slug,
 };
 
@@ -117,7 +121,13 @@ pub async fn post_updated_score(
     author: i32,
     language: String,
     score: i32,
+    status: ChallengeStatus,
 ) {
+    match status {
+        ChallengeStatus::Beta | ChallengeStatus::Draft | ChallengeStatus::Private => return,
+        _ => (),
+    }
+
     let top_solution = match LeaderboardEntry::get_top_entry(&pool, challenge_id, &language).await {
         Ok(o) => o,
         Err(e) => {
