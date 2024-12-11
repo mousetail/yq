@@ -17,7 +17,9 @@ pub struct ScoreImproved {
 
 struct LastMessage {
     id: i32,
+    #[allow(unused)]
     language: String,
+    #[allow(unused)]
     challenge_id: i32,
     author_id: i32,
     author_name: String,
@@ -53,7 +55,7 @@ fn format_message(
                 &previous.previous_author_name,
                 &previous.previous_author_score,
             ) {
-                (previous_author_name.clone(), previous_author_score.clone())
+                (previous_author_name.clone(), *previous_author_score)
             } else {
                 (previous.author_name.clone(), previous.score)
             }
@@ -301,7 +303,7 @@ pub fn init_bot(pool: PgPool, discord_token: String, channel_id: u64) -> Sender<
 
     tokio::spawn(handle_bot_queue(receiver, http_client, pool, channel));
 
-    return sender;
+    sender
 }
 
 #[derive(Clone)]

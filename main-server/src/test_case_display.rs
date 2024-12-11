@@ -58,7 +58,7 @@ impl TestCaseDisplay {
 
         TestCaseDisplay {
             columns,
-            title: test_case.name.map(|e| Cow::Owned(e)),
+            title: test_case.name.map(Cow::Owned),
             status: test_case.pass,
         }
     }
@@ -80,11 +80,11 @@ impl From<RunLangOutput> for OutputDisplay {
                 .tests
                 .test_cases
                 .into_iter()
-                .map(|e| TestCaseDisplay::from_test_case(e))
+                .map(TestCaseDisplay::from_test_case)
                 .collect(),
             passed: value.tests.pass,
             timed_out: value.timed_out,
-            judge_error: (!value.stderr.is_empty()).then(|| value.stderr),
+            judge_error: (!value.stderr.is_empty()).then_some(value.stderr),
         }
     }
 }
