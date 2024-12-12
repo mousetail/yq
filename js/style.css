@@ -69,6 +69,7 @@ header {
 
 main {
   width: calc(min(62rem, 100%));
+  flex: 1;
   margin: 4rem auto;
   padding: 0 1rem;
 }
