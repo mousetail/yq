@@ -197,7 +197,7 @@ pub async fn new_solution(
                     WHERE id=$4",
                     solution.code,
                     new_score,
-                    if new_score < w.score {
+                    if new_score < w.score || !w.valid {
                         OffsetDateTime::now_utc()
                     } else {
                         w.last_improved_date

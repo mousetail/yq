@@ -48,7 +48,7 @@
   </div>
   <div class="lang-list tabs">
     {% for lang, lang_data in languages() %}
-      <a href="/{{ object.challenge.id }}/{{ lang }}"
+      <a href="/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/{{ lang }}"
          class="lang tab
                 {% if object.language == lang %}active{% endif %}">
         <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="">
