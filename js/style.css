@@ -240,6 +240,9 @@ button {
   vertical-align: middle;
   width: 32px;
   height: 32px;
+  @media (prefers-color-scheme: dark) {
+    filter: invert(90%);
+  }
 }
 
 .tabs {
@@ -256,6 +259,10 @@ button {
     --active-tab-color: hsl(var(--main-hue) 80% 50%);
     --tab-border-between: hsl(var(--main-hue) 50% 20%);
   }
+}
+
+.tabs :visited {
+  color: inherit;
 }
 
 .tab {
@@ -276,12 +283,6 @@ button {
   
   & + .tab {
     border-left-color: var(--tab-bg);
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .lang-list img {
-    filter: invert(90%);
   }
 }
 
