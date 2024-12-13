@@ -9,11 +9,22 @@ import { renderResultDisplay, ResultDisplay } from "./test_case";
 
 function editorFromTextArea(
   textarea: HTMLTextAreaElement,
-  extensions: typeof minimalSetup
+  extensions: typeof minimalSetup,
+  swapOnSubmit: boolean
 ): EditorView {
   let view = new EditorView({ doc: textarea.value, extensions });
   textarea.parentNode?.insertBefore(view.dom, textarea);
-  textarea.style.display = "none";
+  if (swapOnSubmit) {
+    textarea.style.display = "none";
+  } else {
+    textarea.parentElement.removeChild(textarea);
+  }
+
+  if (swapOnSubmit && textarea.form) {
+    textarea.form.addEventListener("submit", () => {
+      textarea.value = view.state.doc.toString();
+    });
+  }
 
   return view;
 }
@@ -105,7 +116,11 @@ window.addEventListener("load", async () => {
   )) {
     let plugins: typeof basicSetup = [basicSetup, EditorView.lineWrapping];
     console.log("Replacing textarea with codemirror");
-    let view = editorFromTextArea(textarea, plugins);
+    let view = editorFromTextArea(
+      textarea,
+      plugins,
+      textarea.id !== "main-code"
+    );
 
     if (textarea.classList.contains("lang-typescript")) {
       initTypescriptForCodebox().then((plugin) => {
