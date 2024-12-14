@@ -198,7 +198,7 @@ textarea:focus-within {
   width: 4rem;
 }
 
-.leaderboard table td:nth-child(3) {
+.leaderboard table td:last-child {
   text-align: right;
 }
 
