@@ -55,6 +55,7 @@ impl Code {
 
 #[derive(sqlx::FromRow, Deserialize, Serialize, Debug, Clone)]
 pub struct LeaderboardEntry {
+    pub rank: i64,
     pub id: i32,
     pub author_id: i32,
     pub author_name: String,
@@ -115,18 +116,20 @@ impl LeaderboardEntry {
     ) -> Result<Option<LeaderboardEntry>, sqlx::Error> {
         sqlx::query_as!(
             LeaderboardEntry,
-            "
-        SELECT
-            solutions.id as id,
-            solutions.author as author_id,
-            accounts.username as author_name,
-            accounts.avatar as author_avatar,
-            score FROM solutions
-        LEFT JOIN accounts ON solutions.author = accounts.id
-        WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
-        ORDER BY solutions.score ASC, last_improved_date ASC
-        LIMIT 1
-        ",
+            r#"
+            SELECT
+                solutions.id as id,
+                solutions.author as author_id,
+                accounts.username as author_name,
+                accounts.avatar as author_avatar,
+                1 as "rank!",
+                score
+            FROM solutions
+                LEFT JOIN accounts ON solutions.author = accounts.id
+            WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
+            ORDER BY solutions.score ASC, last_improved_date ASC
+            LIMIT 1
+            "#,
             challenge_id,
             language
         )
@@ -141,17 +144,19 @@ impl LeaderboardEntry {
     ) -> Result<Vec<Self>, sqlx::Error> {
         sqlx::query_as!(
             LeaderboardEntry,
-            "
+            r#"
             SELECT
                 solutions.id as id,
                 solutions.author as author_id,
                 accounts.username as author_name,
                 accounts.avatar as author_avatar,
-                score FROM solutions
-            LEFT JOIN accounts ON solutions.author = accounts.id
+                score,
+                rank() OVER (ORDER BY solutions.score ASC) as "rank!"
+            FROM solutions
+                LEFT JOIN accounts ON solutions.author = accounts.id
             WHERE solutions.challenge=$1 AND solutions.language=$2 AND valid=true
             ORDER BY solutions.score ASC, last_improved_date ASC
-            ",
+            "#,
             challenge_id,
             language
         )
