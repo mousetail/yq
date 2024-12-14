@@ -307,6 +307,14 @@ button {
   display: grid;
   grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
   gap: 0.5rem;
+  height: 17rem;
+  overflow-y: auto;
+
+  & .code-pre {
+    height: unset;
+    min-height: 15rem;
+    overflow-y: visible;
+  }
 }
 
 .test-case-1-columns {
