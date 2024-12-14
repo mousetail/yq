@@ -1,0 +1,8 @@
+[package]
+name = "ranking"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+redis = { version = "0.27.6", features = ["connection-manager", "tokio-comp"] }
+time = "0.3.37"
