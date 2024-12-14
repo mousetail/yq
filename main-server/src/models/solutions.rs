@@ -53,7 +53,7 @@ impl Code {
     }
 }
 
-#[derive(sqlx::FromRow, Deserialize, Serialize, Debug)]
+#[derive(sqlx::FromRow, Deserialize, Serialize, Debug, Clone)]
 pub struct LeaderboardEntry {
     pub id: i32,
     pub author_id: i32,
@@ -62,7 +62,52 @@ pub struct LeaderboardEntry {
     pub score: i32,
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+pub enum RankingMode {
+    Top,
+    Me,
+}
+
+impl Default for RankingMode {
+    fn default() -> Self {
+        RankingMode::Top
+    }
+}
+
 impl LeaderboardEntry {
+    pub async fn get_leaderboard_near(
+        pool: &PgPool,
+        challenge_id: i32,
+        language: &str,
+        user_id: Option<i32>,
+        mode: RankingMode,
+    ) -> Result<Vec<Self>, sqlx::Error> {
+        let mut leaderboard =
+            Self::get_leadeboard_for_challenge_and_language(pool, challenge_id, language).await?;
+
+        match mode {
+            RankingMode::Top => {
+                leaderboard.truncate(10);
+                return Ok(leaderboard);
+            }
+            RankingMode::Me => {
+                let index = leaderboard
+                    .iter()
+                    .position(|k| Some(k.id) == user_id)
+                    .unwrap_or(0);
+                let mut start = index.saturating_sub(10);
+                let mut end = start + 10;
+                if end >= leaderboard.len() {
+                    let diff = start.min(end - leaderboard.len());
+                    start -= diff;
+                    end = (end - diff).min(leaderboard.len());
+                }
+                return Ok(leaderboard[start..end].to_vec());
+            }
+        }
+    }
+
     pub async fn get_top_entry(
         pool: &PgPool,
         challenge_id: i32,

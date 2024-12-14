@@ -180,7 +180,7 @@ function setupJsSubmitOnForm(
   mainTextArea: EditorView,
   setOriginalText: (e: string) => void
 ) {
-  const form = document.querySelector("form");
+  const form = document.querySelector("form.challenge-submission-form");
   const submitButton = form.querySelector(
     "button[type='submit']"
   ) as HTMLButtonElement;

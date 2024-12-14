@@ -1,7 +1,12 @@
-use axum::{extract::Path, http::StatusCode, response::Redirect, Extension};
+use axum::{
+    extract::{Path, Query},
+    http::StatusCode,
+    response::Redirect,
+    Extension,
+};
 use common::langs::LANGS;
 use discord_bot::Bot;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use sqlx::{query_scalar, types::time::OffsetDateTime, PgPool};
 
 use crate::{
@@ -11,12 +16,18 @@ use crate::{
     models::{
         account::Account,
         challenge::ChallengeWithAuthorInfo,
-        solutions::{Code, LeaderboardEntry, NewSolution},
+        solutions::{Code, LeaderboardEntry, NewSolution, RankingMode},
     },
     slug::Slug,
     test_case_display::OutputDisplay,
     test_solution::test_solution,
 };
+
+#[derive(Serialize, Deserialize)]
+pub struct SolutionQueryParameters {
+    #[serde(default)]
+    ranking: RankingMode,
+}
 
 #[derive(Serialize)]
 pub struct AllSolutionsOutput {
@@ -26,18 +37,22 @@ pub struct AllSolutionsOutput {
     code: Option<String>,
     previous_solution_invalid: bool,
     language: String,
+    ranking: RankingMode,
 }
 
 pub async fn all_solutions(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
+    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
     format: Format,
     account: Option<Account>,
     Extension(pool): Extension<PgPool>,
 ) -> Result<AutoOutputFormat<AllSolutionsOutput>, Error> {
-    let leaderboard = LeaderboardEntry::get_leadeboard_for_challenge_and_language(
+    let leaderboard = LeaderboardEntry::get_leaderboard_near(
         &pool,
         challenge_id,
         &language_name,
+        account.as_ref().map(|e| e.id),
+        ranking,
     )
     .await
     .map_err(Error::Database)?;
@@ -60,6 +75,7 @@ pub async fn all_solutions(
             previous_solution_invalid: code.as_ref().is_some_and(|e| !e.valid),
             code: code.map(|d| d.code),
             language: language_name,
+            ranking,
         },
         "challenge.html.jinja",
         format,
@@ -111,6 +127,7 @@ pub async fn challenge_redirect_no_slug(
 
 pub async fn new_solution(
     Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
+    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
     account: Account,
     Extension(pool): Extension<PgPool>,
     Extension(bot): Extension<Bot>,
@@ -226,10 +243,12 @@ pub async fn new_solution(
     Ok(AutoOutputFormat::new(
         AllSolutionsOutput {
             challenge,
-            leaderboard: LeaderboardEntry::get_leadeboard_for_challenge_and_language(
+            leaderboard: LeaderboardEntry::get_leaderboard_near(
                 &pool,
                 challenge_id,
                 &language_name,
+                Some(account.id),
+                ranking,
             )
             .await
             .map_err(Error::Database)?,
@@ -237,6 +256,7 @@ pub async fn new_solution(
             code: Some(solution.code),
             language: language_name,
             previous_solution_invalid,
+            ranking,
         },
         "challenge.html.jinja",
         format,

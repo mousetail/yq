@@ -19,6 +19,18 @@
       {{ object.challenge.description | markdown }}
     </div>
     <div class="leaderboard">
+      <form class="tabs">
+        <button class="tab
+                       {% if object.ranking=='top' %}active{% endif %}"
+                name="ranking"
+                value="top"
+                type="submit">Top</button>
+        <button class="tab
+                       {% if object.ranking=='me' %}active{% endif %}"
+                name="ranking"
+                value="me"
+                type="submit">Me</button>
+      </form>
       <h3>Leaderboard</h3>
       <table>
         <tr>
@@ -56,7 +68,7 @@
       </a>
     {% endfor %}
   </div>
-  <form method="post">
+  <form method="post" class="challenge-submission-form">
     {% if object.previous_solution_invalid %}
       <div class="warning">
         Your previous submitted solution has been made invalid due to updates in the challenge. Please fix your solution before it will

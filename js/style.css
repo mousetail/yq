@@ -269,6 +269,8 @@ button {
   background-color: var(--tab-bg);
   border-bottom: 2px solid var(--tab-border);
   padding: 0.3rem;
+  color: unset;
+  font-size: unset;
 
   &:not(:first-child) {
     border-left: 2px solid var(--tab-border-between);
