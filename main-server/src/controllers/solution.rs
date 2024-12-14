@@ -263,3 +263,27 @@ pub async fn new_solution(
     )
     .with_status(status))
 }
+
+pub async fn get_leaderboard(
+    Path((challenge_id, _slug, language_name)): Path<(i32, String, String)>,
+    Query(SolutionQueryParameters { ranking }): Query<SolutionQueryParameters>,
+    account: Account,
+    Extension(pool): Extension<PgPool>,
+    format: Format,
+) -> Result<AutoOutputFormat<Vec<LeaderboardEntry>>, Error> {
+    let leaderbaord = LeaderboardEntry::get_leaderboard_near(
+        &pool,
+        challenge_id,
+        &language_name,
+        Some(account.id),
+        ranking,
+    )
+    .await
+    .map_err(Error::Database)?;
+
+    return Ok(AutoOutputFormat::new(
+        leaderbaord,
+        "leaderboard.html.jinja",
+        format,
+    ));
+}

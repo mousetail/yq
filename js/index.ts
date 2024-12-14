@@ -111,6 +111,11 @@ const setupEditorControls = (
 window.addEventListener("load", async () => {
   let mainTextArea: EditorView;
 
+  let leaderboardForm;
+  if ((leaderboardForm = document.querySelector(".leaderboard-tabs-form"))) {
+    setupLeaderboardForm(leaderboardForm);
+  }
+
   for (const textarea of document.querySelectorAll<HTMLTextAreaElement>(
     "textarea.codemirror"
   )) {
@@ -162,7 +167,11 @@ async function submitNewSolution(
     });
 
     // todo: Also render the leaderboard
-    const { tests } = (await response.json()) as { tests: ResultDisplay };
+    const { tests, leaderboard } = (await response.json()) as {
+      tests: ResultDisplay;
+      leaderboard: LeaderboardEntry[];
+    };
+    updateLeaderbaord(leaderboard);
 
     if (tests.passed && response.status === 201) {
       setOriginalText(content);
@@ -190,4 +199,86 @@ function setupJsSubmitOnForm(
 
     submitNewSolution(mainTextArea, submitButton, setOriginalText);
   });
+}
+
+function setupLeaderboardForm(form: HTMLFormElement) {
+  form.addEventListener("submit", (ev) => {
+    ev.preventDefault();
+  });
+
+  form.querySelectorAll("button").forEach((button) => {
+    const languageName = window.location.pathname.split("/").pop();
+
+    button.addEventListener("click", async () => {
+      changeActiveLeaderboardTab(button.value);
+
+      const response = await fetch(
+        `../leaderboard/${languageName}?ranking=${encodeURIComponent(
+          button.value
+        )}`,
+        {
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(await response.json());
+      }
+
+      updateLeaderbaord(await response.json());
+    });
+  });
+}
+
+type LeaderboardEntry = {
+  rank: number;
+  author_avatar: string;
+  author_name: string;
+  author_id: number;
+  score: number;
+};
+
+function updateLeaderbaord(ranking: LeaderboardEntry[]) {
+  const leaderboard = document.querySelector(".leaderboard table tbody");
+
+  leaderboard.replaceChildren(
+    ...ranking.map((entry: LeaderboardEntry) => {
+      const row = document.createElement("tr");
+
+      const rankCell = document.createElement("td");
+      rankCell.textContent = `#${entry.rank}`;
+      row.appendChild(rankCell);
+
+      const avatarCell = document.createElement("td");
+      const pfp = document.createElement("img");
+      pfp.src = entry.author_avatar;
+      avatarCell.appendChild(pfp);
+      row.appendChild(avatarCell);
+
+      const authorNameCell = document.createElement("td");
+      const link = document.createElement("a");
+      link.href = `/user/${entry.author_id}`;
+      link.textContent = entry.author_name;
+      authorNameCell.appendChild(link);
+      row.appendChild(authorNameCell);
+
+      const scoreCell = document.createElement("td");
+      scoreCell.textContent = `${entry.score}`;
+      row.appendChild(scoreCell);
+
+      return row;
+    })
+  );
+}
+
+function changeActiveLeaderboardTab(tab: string) {
+  document
+    .querySelector(`.leaderboard-tabs-form button[value=${tab}]`)
+    .classList.add("active");
+  document
+    .querySelector(`.leaderboard-tabs-form button:not([value=${tab}])`)
+    .classList.remove("active");
 }

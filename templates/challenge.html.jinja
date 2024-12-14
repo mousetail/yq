@@ -19,7 +19,7 @@
       {{ object.challenge.description | markdown }}
     </div>
     <div class="leaderboard">
-      <form class="tabs">
+      <form class="tabs leaderboard-tabs-form">
         <button class="tab
                        {% if object.ranking=='top' %}active{% endif %}"
                 name="ranking"
@@ -33,30 +33,34 @@
       </form>
       <h3>Leaderboard</h3>
       <table>
-        <tr>
-          <th></th>
-          <th></th>
-          <th>Author</th>
-          <th>Score</th>
-        </tr>
-        {% for solution in object.leaderboard %}
+        <thead>
           <tr>
-            <td>#{{ solution.rank }}</td>
-            <td>
-              <img src="{{ solution.author_avatar }}&size=18"
-                   alt="{{ solution.author_name }} avatar"
-                   height="18" />
-            </td>
-            <td>
-              <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
-            </td>
-            <td>{{ solution.score }}</td>
+            <th></th>
+            <th></th>
+            <th>Author</th>
+            <th>Score</th>
           </tr>
-        {% else %}
-          <tr>
-            <td colspan="3">No solutions yet</td>
-          </tr>
-        {% endfor %}
+        </thead>
+        <tbody>
+          {% for solution in object.leaderboard %}
+            <tr>
+              <td>#{{ solution.rank }}</td>
+              <td>
+                <img src="{{ solution.author_avatar }}&size=18"
+                     alt="{{ solution.author_name }} avatar"
+                     height="18" />
+              </td>
+              <td>
+                <a href="/user/{{ solution.author_id }}">{{ solution.author_name }}</a>
+              </td>
+              <td>{{ solution.score }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="3">No solutions yet</td>
+            </tr>
+          {% endfor %}
+        </tbody>
       </table>
     </div>
   </div>

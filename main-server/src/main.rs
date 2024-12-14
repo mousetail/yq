@@ -19,7 +19,7 @@ use controllers::{
     challenges::{all_challenges, compose_challenge, new_challenge, view_challenge},
     solution::{
         all_solutions, challenge_redirect, challenge_redirect_no_slug,
-        challenge_redirect_with_slug, new_solution,
+        challenge_redirect_with_slug, get_leaderboard, new_solution,
     },
     user::get_user,
 };
@@ -103,6 +103,10 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/challenge/:id/:slug/solve",
             get(challenge_redirect_with_slug),
+        )
+        .route(
+            "/challenge/:id/:slug/leaderboard/:language",
+            get(get_leaderboard),
         )
         .route(
             "/challenge/:id/:slug/solve/:language",
