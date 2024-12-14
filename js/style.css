@@ -45,7 +45,7 @@ footer {
 
 @media (prefers-color-scheme: dark) {
   footer img {
-    filter: invert()
+    filter: invert();
   }
 }
 
@@ -280,7 +280,7 @@ button {
   color: var(--active-tab-color);
   border: 2px solid var(--tab-border);
   border-bottom: 2px solid var(--active-tab-bg);
-  
+
   & + .tab {
     border-left-color: var(--tab-bg);
   }
@@ -332,6 +332,7 @@ button {
   overflow-x: auto;
   height: 15rem;
   overflow-y: auto;
+  color: black;
 }
 
 .lang-icon {
