@@ -341,6 +341,10 @@ button {
   height: 15rem;
   overflow-y: auto;
   color: black;
+  @media (prefers-color-scheme: dark) {
+    background-color: black;
+    color: white;
+  }
 }
 
 .lang-icon {
