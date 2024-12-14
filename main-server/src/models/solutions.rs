@@ -95,9 +95,9 @@ impl LeaderboardEntry {
             RankingMode::Me => {
                 let index = leaderboard
                     .iter()
-                    .position(|k| Some(k.id) == user_id)
+                    .position(|k| Some(k.author_id) == user_id)
                     .unwrap_or(0);
-                let mut start = index.saturating_sub(10);
+                let mut start = index.saturating_sub(5);
                 let mut end = start + 10;
                 if end >= leaderboard.len() {
                     let diff = start.min(end - leaderboard.len());
