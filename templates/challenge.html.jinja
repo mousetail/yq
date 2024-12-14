@@ -69,7 +69,7 @@
       <a href="/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/{{ lang }}"
          class="lang tab
                 {% if object.language == lang %}active{% endif %}">
-        <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="">
+        <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="" class="lang-icon">
         {{ lang_data.displayName }}
       </a>
     {% endfor %}
