@@ -44,8 +44,8 @@ footer {
 }
 
 @media (prefers-color-scheme: dark) {
-  footer img {
-    filter: invert();
+  footer img, .lang-icon {
+    filter: invert(1);
   }
 }
 
@@ -241,9 +241,6 @@ button {
   vertical-align: middle;
   width: 32px;
   height: 32px;
-  @media (prefers-color-scheme: dark) {
-    filter: invert(90%);
-  }
 }
 
 .tabs {
