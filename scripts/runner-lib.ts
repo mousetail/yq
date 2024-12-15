@@ -1,7 +1,8 @@
-export type PassState = 'Pass' | 'Fail' | 'Warning' | 'Info';
-export type ResultDisplay = { 'Diff': { expected: string, output: string } }
-    | { 'Text': string }
-    | { 'Run': { input?: string | undefined, output: string, error: string } };
+export type PassState = "Pass" | "Fail" | "Warning" | "Info";
+export type ResultDisplay =
+    | { Diff: { expected: string; output: string } }
+    | { Text: string }
+    | { Run: { input?: string | undefined; output: string; error: string } };
 export type Challenge = AsyncGenerator<TestCase, FinalVerdict, undefined>;
 
 export class TestCase {
@@ -9,7 +10,11 @@ export class TestCase {
     pass: PassState;
     resultDisplay: ResultDisplay;
 
-    constructor(name: string | undefined, pass: PassState, resultDisplay: ResultDisplay) {
+    constructor(
+        name: string | undefined,
+        pass: PassState,
+        resultDisplay: ResultDisplay
+    ) {
         this.name = name;
         this.pass = pass;
         this.resultDisplay = resultDisplay;
@@ -24,12 +29,12 @@ export class TestCase {
         if (this.pass === "Fail") {
             this.pass = state;
         }
-        return this
+        return this;
     }
 }
 
 export class FinalVerdict {
-    pass: boolean
+    pass: boolean;
 
     constructor(pass: boolean) {
         this.pass = pass;
@@ -37,18 +42,18 @@ export class FinalVerdict {
 }
 
 export type RunCodeResult = {
-    stdout: string,
-    stderr: string,
-    exitStatus: number
-}
+    stdout: string;
+    stderr: string;
+    exitStatus: number;
+};
 
 export interface RunCompiledCodeResult extends RunCodeResult {
-    compilationResult: RunCodeResult | undefined
+    compilationResult: RunCodeResult | undefined;
 }
 
 export class StringResult {
-    protected context: Context
-    public text: string
+    protected context: Context;
+    public text: string;
 
     public constructor(context: Context, text: string) {
         this.context = context;
@@ -57,16 +62,12 @@ export class StringResult {
 
     public assertEquals(value: string): TestCase {
         const valid = eqIgnoreTrailingWhitespace(this.text, value);
-        const testCase = new TestCase(
-            undefined,
-            valid ? "Pass" : "Fail",
-            {
-                "Diff": {
-                    expected: value,
-                    output: this.text
-                }
-            }
-        );
+        const testCase = new TestCase(undefined, valid ? "Pass" : "Fail", {
+            Diff: {
+                expected: value,
+                output: this.text,
+            },
+        });
         this.context.testCases.push(testCase);
         return testCase;
     }
@@ -74,7 +75,7 @@ export class StringResult {
     public assert(cb: (k: string) => TestCase): TestCase {
         const vestCase = cb(this.text);
         this.context.testCases.push(vestCase);
-        return vestCase
+        return vestCase;
     }
 }
 
@@ -91,54 +92,120 @@ export class RunResult extends StringResult {
     }
 }
 
-export type TestCasesOptions = {
-    inputSeperator: string,
-    outputSeperator: string,
-    numberOfRuns: number,
-    shuffle: boolean
+function shuffleAndDeal<T>(
+    testCases: T[],
+    options: { shuffle: boolean; numberOfRuns: number }
+): T[][] {
+    if (options.shuffle) {
+        shuffle(testCases);
+    }
+
+    // Ensure the runs are uneven
+    // This is mostly to prevent people from hardcoding the length of the input
+    const cardsPerHand = testCases.length / (options.numberOfRuns + 1);
+    const hands = [testCases.slice(0, Math.floor(cardsPerHand * 2))];
+    for (let i = cardsPerHand * 2; i < testCases.length; i += cardsPerHand) {
+        const hand = testCases.slice(
+            Math.floor(i),
+            Math.floor(i + cardsPerHand) + 1
+        );
+        if (hand.length != 0) {
+            hands.push(hand);
+        }
+    }
+
+    return hands;
 }
+
+export type TestCasesOptions = {
+    inputSeperator: string;
+    outputSeperator: string;
+    numberOfRuns: number;
+    shuffle: boolean;
+};
+
+export type FilterCasesOptions = {
+    inputSeperator: string;
+    shuffle: boolean;
+    numberOfRuns: number;
+};
 
 export class Context {
     public code: string;
-    private onRunCallback: (code: string, input: string | undefined) => Promise<RunCompiledCodeResult>;
+    private onRunCallback: (
+        code: string,
+        input: string | undefined
+    ) => Promise<RunCompiledCodeResult>;
     public testCases: TestCase[];
 
     private runs: number = 0;
 
-    constructor(code: string, onRunCallback: (code: string, input: string | undefined) => Promise<RunCompiledCodeResult>) {
+    constructor(
+        code: string,
+        onRunCallback: (
+            code: string,
+            input: string | undefined
+        ) => Promise<RunCompiledCodeResult>
+    ) {
         this.code = code;
         this.onRunCallback = onRunCallback;
         this.testCases = [];
     }
 
-    async* runTestCases(testCases: [string, string][], overrideOptions: Partial<TestCasesOptions> = {}): AsyncIterator<TestCase> {
+    /**
+     * Helper method for when each input corresponds to a matching output.
+     * Automatically shuffles the test cases and divides them over multiple runs.
+     * @param testCases A mapping of input -> expected output
+     * @param overrideOptions Special options (optional)
+     */
+    async *runTestCases(
+        testCases: [string, string][],
+        overrideOptions: Partial<TestCasesOptions> = {}
+    ): AsyncIterator<TestCase> {
         const options: TestCasesOptions = {
-            inputSeperator: '\n',
-            outputSeperator: '\n',
+            inputSeperator: "\n",
+            outputSeperator: "\n",
             numberOfRuns: 2,
             shuffle: true,
-            ...overrideOptions
-        }   
-        if (options.shuffle) {
-            shuffle(testCases);
-        }
+            ...overrideOptions,
+        };
 
-        // Ensure the runs are uneven
-        // This is mostly to prevent people from hardcoding the length of the input
-        const cardsPerHand = testCases.length / (options.numberOfRuns + 1);
-        const hands = [testCases.slice(0, Math.floor(cardsPerHand * 2))];
-        for (let i=cardsPerHand*2; i<testCases.length; i+=cardsPerHand) {
-            hands.push(testCases.slice(Math.floor(i), Math.floor(i+cardsPerHand)+1));
-        }
+        const hands = shuffleAndDeal(testCases, options);
 
         // TODO: When running code becomes thread safe, this should run in paralel
         for (const hand of hands) {
-            if (hand.length === 0) {
-                continue;
-            }
-            yield (await this.run(hand.map(i=>i[0]).join(options.inputSeperator))).assertEquals(
-                hand.map(i=>i[1]).join(options.outputSeperator)
-            )
+            yield (
+                await this.run(
+                    hand.map((i) => i[0]).join(options.inputSeperator)
+                )
+            ).assertEquals(hand.map((i) => i[1]).join(options.outputSeperator));
+        }
+    }
+
+    async *runFilterCases(
+        testCases: [string, boolean][],
+        overrideOptions: Partial<FilterCasesOptions> = {}
+    ): AsyncIterator<TestCase> {
+        const options: FilterCasesOptions = {
+            inputSeperator: "\n",
+            numberOfRuns: 2,
+            shuffle: true,
+            ...overrideOptions,
+        };
+        const hands = shuffleAndDeal(testCases, options);
+
+        // TODO: When running code becomes thread safe, this should run in paralel
+        for (const hand of hands) {
+            yield (
+                await this.run(
+                    hand.map((i) => i[0]).join(options.inputSeperator)
+                )
+            ).assertEquals(
+                hand
+                    .filter((i) => i[1])
+                    .map((i) => i[0])
+                    .join(options.inputSeperator)
+            );
         }
     }
 
@@ -148,23 +215,24 @@ export class Context {
 
     async runCode(code: string, input?: string | undefined) {
         const result = await this.onRunCallback(code, input);
-        let {stderr, stdout, compilationResult} = result;
-        const compilationFailed = compilationResult && compilationResult.exitStatus !== 0;
+        let { stderr, stdout, compilationResult } = result;
+        const compilationFailed =
+            compilationResult && compilationResult.exitStatus !== 0;
         if (compilationFailed) {
             stdout = compilationResult.stdout;
             stderr = compilationResult.stderr;
         }
         const runDisplay: TestCase = new TestCase(
             `Run #${++this.runs}`,
-            compilationFailed ? 'Warning' : 'Info',
+            compilationFailed ? "Warning" : "Info",
             {
-                "Run": {
-                    "input": input,
-                    "output": stdout,
-                    "error": stderr,
-                }
+                Run: {
+                    input: input,
+                    output: stdout,
+                    error: stderr,
+                },
             }
-        )
+        );
         console.log(JSON.stringify(runDisplay));
         return new RunResult(this, result);
     }
@@ -175,23 +243,25 @@ export class Context {
     }
 
     noFailures(): FinalVerdict {
-        if (this.testCases.every((i) => i.pass !== 'Fail')) {
-            return new FinalVerdict(true)
+        if (this.testCases.every((i) => i.pass !== "Fail")) {
+            return new FinalVerdict(true);
         } else {
-            return new FinalVerdict(false)
+            return new FinalVerdict(false);
         }
     }
 }
 
 export const eqIgnoreTrailingWhitespace = (a: string, b: string): boolean => {
-    const [a_stripped, b_stripped] = [a, b].map(
-        (text) => text.replace(/\s*(?=\n|$)/ug, '')
-    )
-    return a_stripped == b_stripped
-}
+    const [a_stripped, b_stripped] = [a, b].map((text) =>
+        text.replace(/\s*(?=\n|$)/gu, "")
+    );
+    return a_stripped == b_stripped;
+};
 
 export function range(a: number, b?: number): number[] {
-    return b === undefined ? [...Array(a).keys()] : range(b - a).map(x => x + a);
+    return b === undefined
+        ? [...Array(a).keys()]
+        : range(b - a).map((x) => x + a);
 }
 
 export function rand(a: number, b?: number): number {
