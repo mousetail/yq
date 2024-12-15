@@ -23,7 +23,7 @@ static RUNS_SEMAPHORE: tokio::sync::Semaphore =
 async fn install_plugin(lang: &Lang) -> Result<CacheMap<String, ()>, RunProcessError> {
     println!("Installing language version {}", lang.display_name);
     let plugin_install_output = Command::new("asdf")
-        .args(["plugin", "add", lang.display_name, lang.plugin])
+        .args(["plugin", "add", lang.plugin_name, lang.plugin])
         .stderr(Stdio::inherit())
         .status()
         .await?;
