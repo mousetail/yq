@@ -69,7 +69,10 @@
       <a href="/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/{{ lang }}"
          class="lang tab
                 {% if object.language == lang %}active{% endif %}">
-        <img width="32" src="/static/lang-icons/{{ lang_data.icon }}" alt="" class="lang-icon">
+        <img width="32"
+             src="/static/lang-icons/{{ lang_data.icon }}"
+             alt=""
+             class="lang-icon">
         {{ lang_data.displayName }}
       </a>
     {% endfor %}
@@ -100,6 +103,7 @@
       <div class="warning">You must be logged in to submit a solution.</div>
       <button type="submit" disabled>Submit!</button>
     {% endif %}
+    <div class="error hidden solution-submit-error"></div>
   </form>
   {{ test_cases::test_cases(cases=object.tests) }}
 {% endblock content %}

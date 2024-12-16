@@ -103,10 +103,10 @@ impl Default for NewChallenge {
                 "    ]\n",
                 "  );\n",
                 "  // For \"Filter\" Style challenges where the goal is to output all inputs that match some condition\n",
-                "  yield* context.runFilterCases(\n",
+                "  yield* context.runFilterCases([\n",
                 "      [\"This should be outputted\", true],\n",
                 "      [\"This should not be outputted\", false],\n",
-                "  );\n",
+                "  ]);\n",
                 "  // Finally, the challenge is passed if no test cases failed",
                 "  return context.noFailures();\n",
                 "})"

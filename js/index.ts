@@ -1,5 +1,8 @@
 import { basicSetup, EditorView, minimalSetup } from "codemirror";
+import { keymap } from "@codemirror/view";
+import { indentWithTab } from "@codemirror/commands";
 import { javascript } from "@codemirror/lang-javascript";
+import { indentUnit } from "@codemirror/language";
 import { autocompletion } from "@codemirror/autocomplete";
 import { WorkerShape } from "@valtown/codemirror-ts/worker";
 import * as Comlink from "comlink";
@@ -111,7 +114,7 @@ const setupEditorControls = (
 window.addEventListener("load", async () => {
   let mainTextArea: EditorView;
 
-  let leaderboardForm;
+  let leaderboardForm: HTMLFormElement | undefined;
   if ((leaderboardForm = document.querySelector(".leaderboard-tabs-form"))) {
     setupLeaderboardForm(leaderboardForm);
   }
@@ -119,7 +122,12 @@ window.addEventListener("load", async () => {
   for (const textarea of document.querySelectorAll<HTMLTextAreaElement>(
     "textarea.codemirror"
   )) {
-    let plugins: typeof basicSetup = [basicSetup, EditorView.lineWrapping];
+    let plugins: typeof basicSetup = [
+      basicSetup,
+      keymap.of([indentWithTab]),
+      indentUnit.of("\t"),
+      EditorView.lineWrapping,
+    ];
     console.log("Replacing textarea with codemirror");
     let view = editorFromTextArea(
       textarea,
@@ -165,6 +173,14 @@ async function submitNewSolution(
         code: content,
       }),
     });
+
+    const errorDiv = document.querySelector(".solution-submit-error");
+    if (![200, 201, 400].includes(response.status)) {
+      errorDiv.textContent = await response.text();
+      errorDiv.classList.remove("hidden");
+      return;
+    }
+    errorDiv.classList.add("hidden");
 
     // todo: Also render the leaderboard
     const { tests, leaderboard } = (await response.json()) as {
