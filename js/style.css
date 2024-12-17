@@ -30,6 +30,10 @@ body {
   font-size: 18px;
 }
 
+p {
+  margin-bottom: 0.5rem;
+}
+
 footer {
   border-top: 3px solid var(--light-border);
   padding: 0 1rem;
@@ -44,7 +48,8 @@ footer {
 }
 
 @media (prefers-color-scheme: dark) {
-  footer img, .lang-icon {
+  footer img,
+  .lang-icon {
     filter: invert(1);
   }
 }
