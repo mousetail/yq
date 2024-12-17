@@ -16,6 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Cache Target
+      uses: actions/cache@v3
       id: cache-cargo
       with:
        path: |
