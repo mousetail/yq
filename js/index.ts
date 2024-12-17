@@ -1,6 +1,7 @@
 import { basicSetup, EditorView, minimalSetup } from "codemirror";
 import { keymap } from "@codemirror/view";
 import { indentWithTab } from "@codemirror/commands";
+import { Compartment } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { indentUnit } from "@codemirror/language";
 import { autocompletion } from "@codemirror/autocomplete";
@@ -9,6 +10,9 @@ import * as Comlink from "comlink";
 import { StateEffect } from "@codemirror/state";
 import "./style.css";
 import { renderResultDisplay, ResultDisplay } from "./test_case";
+
+import { oneDark } from "@codemirror/theme-one-dark";
+import { basicLight } from "@fsegurai/codemirror-theme-basic-light";
 
 function editorFromTextArea(
   textarea: HTMLTextAreaElement,
@@ -111,6 +115,14 @@ const setupEditorControls = (
   });
 };
 
+function getTheme() {
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    return oneDark;
+  } else {
+    return basicLight;
+  }
+}
+
 window.addEventListener("load", async () => {
   let mainTextArea: EditorView;
 
@@ -119,6 +131,8 @@ window.addEventListener("load", async () => {
     setupLeaderboardForm(leaderboardForm);
   }
 
+  const editorTheme = new Compartment();
+
   for (const textarea of document.querySelectorAll<HTMLTextAreaElement>(
     "textarea.codemirror"
   )) {
@@ -126,6 +140,7 @@ window.addEventListener("load", async () => {
       basicSetup,
       keymap.of([indentWithTab]),
       indentUnit.of("\t"),
+      editorTheme.of(getTheme()),
       EditorView.lineWrapping,
     ];
     console.log("Replacing textarea with codemirror");
