@@ -1,6 +1,11 @@
 {% import "base/test_cases.html.jinja" as test_cases %}
 {% import "base/challenge_tabs.html.jinja" as challenge_tabs %}
 {% extends "base/base.html.jinja" %}
+{% block head %}
+  {{ super() }}
+  <link rel="canonical"
+        href="https://byte-heist.com/challenge/{{ object.challenge.id }}/{{ object.challenge.name | slugify }}/solve/python">
+{% endblock head %}
 {% block content %}
   {{ challenge_tabs::challenge_tabs(active="solve", id=object.challenge.id, name=object.challenge.name, author=object.challenge.author) }}
   <h1>{{ object.challenge.name }}</h1>

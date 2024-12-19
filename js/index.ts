@@ -197,7 +197,6 @@ async function submitNewSolution(
     }
     errorDiv.classList.add("hidden");
 
-    // todo: Also render the leaderboard
     const { tests, leaderboard } = (await response.json()) as {
       tests: ResultDisplay;
       leaderboard: LeaderboardEntry[];
